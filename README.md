@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/JustAnAlias/GameProject.png?label=ready&title=Ready)](https://waffle.io/JustAnAlias/GameProject)
 # GameProject Semester4
 =======
 

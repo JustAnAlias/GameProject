@@ -36,7 +36,7 @@ this.heal(amount){
   this.health += amount;
 }
 
-  this.move(x,y){
+  this.move(x,y,z){
     this.x = x;
     this.y = y;
   }

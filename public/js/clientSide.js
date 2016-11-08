@@ -10,7 +10,17 @@ window.addEventListener('DOMContentLoaded', function(){
   engine = new BABYLON.Engine(canvas, true);
   // lav en scene
   scene = createScene();
+  scene.registerBeforeRender(function(){
+      if(scene.isReady()) {
+        for (var p in players){
 
+          if (BABYLON.Vector3.Distance(players[p].mesh.position, players[p].destination)> 10){
+            // players[p].rotate();
+            players[p].move();
+          }
+        }
+      }
+   });
 
 
   //addLocalPlayer();
@@ -59,14 +69,31 @@ window.addEventListener("click", function () {
   }
 
   function rotateItem(item, direction){
-    
+
   }
 
   // move an item in the world to the target position
   function moveItem(item, target){
+    //var anim = BABYLON.Animation.CreateAndStartAnimation("anim", item.mesh, "position", 30, 100, item.mesh.position, target, 0);
+/*
 
-    var anim = BABYLON.Animation.CreateAndStartAnimation("anim", item.mesh, "position", 30, 100, item.mesh.position, target, 0);
-
+    scene.registerBeforeRender(function(){
+		    if(scene.isReady() && meshPlayer) {
+          for (var p in players){
+            if (players[p].mesh.position !== players[p].destination){
+              players[p].rotate();
+              players[p].move();
+            }
+          }
+          if (keys.avancer == 1){	// En avant
+            posX = Math.sin(parseFloat(meshPlayer.rotation.y));
+            posZ = Math.cos(parseFloat(meshPlayer.rotation.y));
+            velocity = new BABYLON.Vector3(parseFloat(posX) / VitessePerso, 0, parseFloat(posZ) / VitessePerso);
+		          meshPlayer.moveWithCollisions(velocity);
+          }
+		    }
+	   });
+*/
   }
 
 
@@ -83,11 +110,23 @@ window.addEventListener("click", function () {
     }
     else{
       players[player.id] = player;
+      players[player.id].speed = 20;
       players[player.id].mesh = BABYLON.Mesh.CreateBox(player.id, 1, scene);
       players[player.id].mesh.position.y += 60;
       players[player.id].mesh.checkCollisions = true;
       players[player.id].collisionRadius = new BABYLON.Vector3(0.01, 0.01, 0.01);
-      players[player.id].physicsImpostor = new BABYLON.PhysicsImpostor(players[player.id].mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9 }, scene);
+      players[player.id].physicsImpostor = new BABYLON.PhysicsImpostor(players[player.id].mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 100, restitution: 0.3 }, scene);
+      players[player.id].move = function(){
+        // make it rotate a degree towards target here...
+
+        players[player.id].mesh.rotation.x -= (1/180);
+
+        // run forrest!
+        posX = Math.sin(parseFloat(players[player.id].mesh.rotation.y));
+        posZ = Math.cos(parseFloat(players[player.id].mesh.rotation.y));
+        velocity = new BABYLON.Vector3(parseFloat(posX) / players[player.id].speed, 0, parseFloat(posZ) / players[player.id].speed);
+          players[player.id].mesh.moveWithCollisions(velocity);
+      }
     }
     if (playerID === player.id){
       changeCameraToPlayer(players[player.id]);
@@ -127,17 +166,6 @@ window.addEventListener("click", function () {
 
 
 
-
-/*
-var player = {};
-player.rotationSpeed = 1;
-player.movementSpeed = 1;
-
-window.addEventListener('resize', function(){
-  engine.resize();
-});
-
-*/
 
 var createScene = function () {
 	scene = new BABYLON.Scene(engine);

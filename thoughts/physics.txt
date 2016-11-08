@@ -1,1 +1,3 @@
 physics was learned from this: http://www.babylonjs-playground.com/#DLBW7#10
+
+http://www.html5gamedevs.com/

@@ -25,102 +25,24 @@ window.addEventListener('DOMContentLoaded', function(){
     scene.render();
   });
 });
+window.addEventListener("click", function () {
+  // We try to pick an object
+  var target = scene.pick(scene.pointerX, scene.pointerY);
 
+  // console.log(target);
 
-  function createScene(){
-    // creating the scene
-    scene = new BABYLON.Scene(engine);
-     // setting gravity and physics engine and enabling it
-     var gravityVector = new BABYLON.Vector3(0, -9.81, 0);
-     var physicsPlugin = new BABYLON.CannonJSPlugin();
-     scene.enablePhysics(gravityVector, physicsPlugin);
-
-    scene.collisionsEnabled = true;
-    scene.workerCollisions = true;
-    var postProcess = new BABYLON.FxaaPostProcess("fxaa",1.0,null,null,engine,true);
-
-/*
-    groundMaterial = new BABYLON.StandardMaterial("ground", scene);
-    groundMaterial.diffuseTexture = new BABYLON.Texture("/grass1.jpg", scene);
-    groundPlane = BABYLON.Mesh.CreatePlane("groundPlane", 100, scene);
-    groundPlane.material = groundMaterial;
-    // ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "/map", 200, 200, 250, 0, 10, scene, false, successCallback);
-    ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "/map", 200, 200, 250, 0, 10, scene, false);
-*/
-    // add camera
-
-    freeCam = new BABYLON.FreeCamera('camera1', new BABYLON.Vector3(0,5,-10), scene);
-    freeCam.setTarget(BABYLON.Vector3.Zero());
-    freeCam.attachControl(canvas, false);
-    freeCam.checkCollisions = true;
-    // scene.activeCamera = freeCam;
-
-    archCam = new BABYLON.ArcRotateCamera("cam",10,20,50, new BABYLON.Vector3(0,0,0), scene);
-    archCam.attachPostProcess(postProcess);
-    archCam.checkCollisions = true;
-    archCam.collisionRadius = new BABYLON.Vector3(0.5, 0.5, 0.5);
-    archCam.attachControl(canvas, true);
-    scene.activeCamera = archCam;
-    // add lights
-    light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,1,0), scene);
-
-//    Name, picture url, meshSize, width, height, number of subdivisions, minHeight, maxHeight, scene, updateable?
-//    var ground = BABYLON.Mesh.CreateGroundFromHeightMap("grd", "/map", 300,300,125,0,60,scene,false);
-
-    var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "/map", 1000, 1000, 64, 0, 60, scene, true);
-
-    var groundMaterial1 = new BABYLON.StandardMaterial("groundMat", scene);
-    groundMaterial1.diffuseTexture = new BABYLON.Texture("/gras1.jpg", scene);
-  	groundMaterial1.diffuseTexture.uScale = 10.0;
-  	groundMaterial1.diffuseTexture.vScale = 10.0;
-    // does groundmaterial have collisionchecking? - or is it only ground?
-    // groundMaterial1.checkCollisions = true;
-    ground.material = groundMaterial1;
-    ground.checkCollisions = true;
-    ground.collisionRadius = new BABYLON.Vector3(0.1, 0.1, 0.1);
-    ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
-
-    // var groundPlane = BABYLON.Mesh.CreatePlane("groundPlane", 200.0, scene);
-    // groundPlane.material = groundMaterial1;
-
-
-
-    // old white ground
-//    var ground = BABYLON.Mesh.CreateGround('ground1', 20,20,2,scene);
-
-    // new create ground from heightMap
-
-    // groundMaterial = new BABYLON.StandardMaterial("ground", scene);
-    // ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "/map", 200, 200, 250, 0, 10, scene, false);
-    // ground.material = groundMaterial;
-
-    // add local players avatar
-
-
-  window.addEventListener("click", function () {
-    // We try to pick an object
-    var target = scene.pick(scene.pointerX, scene.pointerY);
-
-    // console.log(target);
-
-    if(target.pickedMesh.name == 'GroundMesh'){
-      socket.emit('updatePosition', target.pickedPoint);
-      console.log('you clicked on ' + target.pickedMesh.name + ' at position ' + target.pickedMesh.position);
-      moveItem(players[playerID], target.pickedPoint);
-    }
-    else{
-      socket.emit('updatePosition', target.pickedPoint);
-      target.pickedPoint.y ++;
-      moveItem(players[playerID], target.pickedMesh.position);
-    }
-
-});
-
-
-
-    return scene;
+  if(target.pickedMesh.name == 'GroundMesh'){
+    socket.emit('updatePosition', target.pickedPoint);
+    console.log('you clicked on ' + target.pickedMesh.name + ' at position ' + target.pickedMesh.position);
+    moveItem(players[playerID], target.pickedPoint);
+  }
+  else{
+    socket.emit('updatePosition', target.pickedPoint);
+    target.pickedPoint.y ++;
+    moveItem(players[playerID], target.pickedMesh.position);
   }
 
+});
   function removeRemotePlayer(player){
     players[player.id].mesh.dispose();
   }
@@ -137,25 +59,11 @@ window.addEventListener('DOMContentLoaded', function(){
   }
 
   function rotateItem(item, direction){
-
+    
   }
 
   // move an item in the world to the target position
   function moveItem(item, target){
-/*
-    console.log(target);
-    item.mesh.position.x = target.x;
-    item.mesh.position.y = target.y + 1;
-    item.mesh.position.z = target.z;
-
-    */
-
-//    var easingFunction = new BABYLON.BackEase(.8);
-	//			easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEIN);
-
-				//Animation.CreateAndStartAnimation = function(name, mesh, tartgetProperty, framePerSecond, totalFrame, from, to, loopMode,easingfunction );
-				// var anim = BABYLON.Animation.CreateAndStartAnimation("anim", item.mesh, "position", 30, 100, item.mesh.position, target, 2, easingFunction);
-    // item.mesh.translate(new BABYLON.Vector3(target.x, target.y, target.z), 0.5);
 
     var anim = BABYLON.Animation.CreateAndStartAnimation("anim", item.mesh, "position", 30, 100, item.mesh.position, target, 0);
 
@@ -175,10 +83,10 @@ window.addEventListener('DOMContentLoaded', function(){
     }
     else{
       players[player.id] = player;
-      players[player.id].mesh = BABYLON.Mesh.CreateSphere(player.id, 16, 1, scene);
+      players[player.id].mesh = BABYLON.Mesh.CreateBox(player.id, 1, scene);
       players[player.id].mesh.position.y += 60;
       players[player.id].mesh.checkCollisions = true;
-      players[player.id].collisionRadius = new BABYLON.Vector3(0.5, 0.5, 0.5);
+      players[player.id].collisionRadius = new BABYLON.Vector3(0.01, 0.01, 0.01);
       players[player.id].physicsImpostor = new BABYLON.PhysicsImpostor(players[player.id].mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9 }, scene);
     }
     if (playerID === player.id){
@@ -230,3 +138,69 @@ window.addEventListener('resize', function(){
 });
 
 */
+
+var createScene = function () {
+	scene = new BABYLON.Scene(engine);
+	scene.enablePhysics(new BABYLON.Vector3(0, -9.8, 0), new BABYLON.CannonJSPlugin());
+
+	var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+	light.intensity = 0.5;
+
+	archCam = new BABYLON.ArcRotateCamera("Camera", 0, 0.9, 300, BABYLON.Vector3.Zero(), scene);
+	archCam.attachControl(canvas, true);
+
+	ground = BABYLON.Mesh.CreateGroundFromHeightMap(
+		"ground",
+		"map",
+		500, 500, 100, 0, 40, scene, false,
+		function () { // callback.  When heightMap done, run this.
+			var ground2 = ground.clone();
+			ground2.material = new BABYLON.StandardMaterial("wire", scene);
+			ground2.material.diffuseColor = BABYLON.Color3.Black();
+			ground2.material.wireframe = true;
+
+			var gbody = ground.setPhysicsState(BABYLON.PhysicsEngine.HeightmapImpostor, { mass: 0 });
+/*
+			var ball;
+			var ballbody;
+			var createBall = function () {
+				ball = BABYLON.Mesh.CreateSphere("s", 8, 14, scene);
+				ball.position.y = 160;
+				ball.position.x = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
+				ball.position.z = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
+				ball.material = new BABYLON.StandardMaterial("ballmat", scene);
+				ball.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+				return ball.setPhysicsState(BABYLON.PhysicsEngine.SphereImpostor, {
+					mass: 1,
+					friction: 0,
+					restitution: .5
+				});
+			}
+
+			var ballbody = createBall();
+			var power = 20;  // impulsing power.
+
+			scene.onPointerUp = function (evt, pickInfo) {
+				if (pickInfo.pickedMesh.name === "s") {
+					pickInfo.pickedMesh.applyImpulse(
+						pickInfo.pickedMesh.position.subtract(camera.position).normalize().scale(power), // dir & magnitude
+						pickInfo.pickedPoint // impact point on the mesh
+						)
+				}
+			}
+
+			scene.registerBeforeRender(function () {
+				if (ball.position.y < 0) {
+					ball.position.y = 160;
+					ball.position.x = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
+					ball.position.z = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
+					ball.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+					ball.updatePhysicsBodyPosition();
+				}
+			});
+*/
+		} // end of callback
+	);
+
+	return scene;
+};

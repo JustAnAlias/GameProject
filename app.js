@@ -28,7 +28,7 @@ app.get('/engine', function(req, res){
 
 app.get('/physics', function(req, res){
   //// console.log(req);
-  res.sendFile(__dirname + '/public/js/lib/cannon.min.js');
+  res.sendFile(__dirname + '/public/js/lib/cannon.js');
 });
 
 app.get('/client', function(req, res){

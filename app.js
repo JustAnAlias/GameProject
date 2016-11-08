@@ -26,6 +26,11 @@ app.get('/engine', function(req, res){
   res.sendFile(__dirname + '/public/js/lib/babylon.2.4.max.js');
 });
 
+app.get('/physics', function(req, res){
+  //// console.log(req);
+  res.sendFile(__dirname + '/public/js/lib/cannon.min.js');
+});
+
 app.get('/client', function(req, res){
   //// console.log(req);
   res.sendFile(__dirname + '/public/js/clientSide.js');
@@ -33,7 +38,8 @@ app.get('/client', function(req, res){
 
 app.get('/map', function(req, res){
   // console.log(req);
-  res.sendFile(__dirname + '/public/textures/map.jpg');
+  // res.sendFile(__dirname + '/public/textures/map.jpg');
+  res.sendFile(__dirname + '/public/textures/map3.jpg');
 });
 
 app.get('/gras1.jpg', function(req, res){

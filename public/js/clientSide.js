@@ -1,4 +1,4 @@
-var canvas, engine, scene, light, groundMaterial, ground, freeCam, playerCam, archCam;
+var canvas, engine, scene, light, groundMaterial, groundPlane, ground, freeCam, playerCam, archCam;
 var playerID;
 var players = {};
 
@@ -10,6 +10,8 @@ window.addEventListener('DOMContentLoaded', function(){
   engine = new BABYLON.Engine(canvas, true);
   // lav en scene
   scene = createScene();
+
+
 
   //addLocalPlayer();
 
@@ -26,39 +28,57 @@ window.addEventListener('DOMContentLoaded', function(){
 
 
   function createScene(){
+    // creating the scene
     scene = new BABYLON.Scene(engine);
-    // scene.gravity = new BABYLON.Vector3(0, -9.81, 0);
+     // setting gravity and physics engine and enabling it
+     var gravityVector = new BABYLON.Vector3(0, -9.81, 0);
+     var physicsPlugin = new BABYLON.CannonJSPlugin();
+     scene.enablePhysics(gravityVector, physicsPlugin);
 
+    scene.collisionsEnabled = true;
+    scene.workerCollisions = true;
     var postProcess = new BABYLON.FxaaPostProcess("fxaa",1.0,null,null,engine,true);
 
-    archCam = new BABYLON.ArcRotateCamera("cam",10,30,0,new BABYLON.Vector3(0,0,0),scene);
-    archCam.attachControl(canvas, false);
-    archCam.attachPostProcess(postProcess);
+/*
+    groundMaterial = new BABYLON.StandardMaterial("ground", scene);
+    groundMaterial.diffuseTexture = new BABYLON.Texture("/grass1.jpg", scene);
+    groundPlane = BABYLON.Mesh.CreatePlane("groundPlane", 100, scene);
+    groundPlane.material = groundMaterial;
+    // ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "/map", 200, 200, 250, 0, 10, scene, false, successCallback);
+    ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "/map", 200, 200, 250, 0, 10, scene, false);
+*/
+    // add camera
+
     freeCam = new BABYLON.FreeCamera('camera1', new BABYLON.Vector3(0,5,-10), scene);
     freeCam.setTarget(BABYLON.Vector3.Zero());
     freeCam.attachControl(canvas, false);
+    freeCam.checkCollisions = true;
+    // scene.activeCamera = freeCam;
 
-
-
+    archCam = new BABYLON.ArcRotateCamera("cam",10,20,50, new BABYLON.Vector3(0,0,0), scene);
+    archCam.attachPostProcess(postProcess);
+    archCam.checkCollisions = true;
+    archCam.collisionRadius = new BABYLON.Vector3(0.5, 0.5, 0.5);
+    archCam.attachControl(canvas, true);
+    scene.activeCamera = archCam;
+    // add lights
     light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,1,0), scene);
-
-    var groundMaterial = new BABYLON.StandardMaterial("ground",scene);
-    groundMaterial.diffuseTexture = new BABYLON.Texture("gras1.jpg",scene);
-//    groundMaterial.specularPower = 10000;
-
-    groundMaterial.diffuseTexture.uScale = 0.0;
-    groundMaterial.diffuseTexture.vScale = 0.0;
 
 //    Name, picture url, meshSize, width, height, number of subdivisions, minHeight, maxHeight, scene, updateable?
 //    var ground = BABYLON.Mesh.CreateGroundFromHeightMap("grd", "/map", 300,300,125,0,60,scene,false);
+
     var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "/map", 1000, 1000, 64, 0, 60, scene, true);
 
     var groundMaterial1 = new BABYLON.StandardMaterial("groundMat", scene);
     groundMaterial1.diffuseTexture = new BABYLON.Texture("/gras1.jpg", scene);
   	groundMaterial1.diffuseTexture.uScale = 10.0;
   	groundMaterial1.diffuseTexture.vScale = 10.0;
-
+    // does groundmaterial have collisionchecking? - or is it only ground?
+    // groundMaterial1.checkCollisions = true;
     ground.material = groundMaterial1;
+    ground.checkCollisions = true;
+    ground.collisionRadius = new BABYLON.Vector3(0.1, 0.1, 0.1);
+    ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
 
     // var groundPlane = BABYLON.Mesh.CreatePlane("groundPlane", 200.0, scene);
     // groundPlane.material = groundMaterial1;
@@ -81,7 +101,7 @@ window.addEventListener('DOMContentLoaded', function(){
     // We try to pick an object
     var target = scene.pick(scene.pointerX, scene.pointerY);
 
-    console.log(target);
+    // console.log(target);
 
     if(target.pickedMesh.name == 'GroundMesh'){
       socket.emit('updatePosition', target.pickedPoint);
@@ -130,14 +150,14 @@ window.addEventListener('DOMContentLoaded', function(){
 
     */
 
-    var easingFunction = new BABYLON.BackEase(.8);
-				easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEIN);
+//    var easingFunction = new BABYLON.BackEase(.8);
+	//			easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEIN);
 
 				//Animation.CreateAndStartAnimation = function(name, mesh, tartgetProperty, framePerSecond, totalFrame, from, to, loopMode,easingfunction );
 				// var anim = BABYLON.Animation.CreateAndStartAnimation("anim", item.mesh, "position", 30, 100, item.mesh.position, target, 2, easingFunction);
     // item.mesh.translate(new BABYLON.Vector3(target.x, target.y, target.z), 0.5);
 
-    var anim = BABYLON.Animation.CreateAndStartAnimation("anim", item.mesh, "position", 30, 100, item.mesh.position, target, 2);
+    var anim = BABYLON.Animation.CreateAndStartAnimation("anim", item.mesh, "position", 30, 100, item.mesh.position, target, 0);
 
   }
 
@@ -147,7 +167,7 @@ window.addEventListener('DOMContentLoaded', function(){
       console.log('setting playerID to: ' + data.id);
       playerID = data.id;
     }
-    
+
   }
   function addRemotePlayer(player){
     if (players[player.id]){
@@ -156,12 +176,21 @@ window.addEventListener('DOMContentLoaded', function(){
     else{
       players[player.id] = player;
       players[player.id].mesh = BABYLON.Mesh.CreateSphere(player.id, 16, 1, scene);
-      players[player.id].mesh.position.y += 30;
+      players[player.id].mesh.position.y += 60;
+      players[player.id].mesh.checkCollisions = true;
+      players[player.id].collisionRadius = new BABYLON.Vector3(0.5, 0.5, 0.5);
+      players[player.id].physicsImpostor = new BABYLON.PhysicsImpostor(players[player.id].mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9 }, scene);
     }
     if (playerID === player.id){
-      archCam.target = players[player.id].mesh;
-      scene.activeCamera = archCam;
+      changeCameraToPlayer(players[player.id]);
+
     }
+  }
+
+  function changeCameraToPlayer(thePlayer){
+    scene.activeCamera = archCam;
+    archCam.target = thePlayer.mesh;
+
   }
 
     // players[data.id].mesh = BABYLON.Mesh.CreateSphere(player.id, 16, 1, scene);

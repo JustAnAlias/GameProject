@@ -1,16 +1,25 @@
-function Player(startX, startY, health, role, id){
+function Player(id, startPosition, startDestination){
   // set players starting position
-  this.x = startX;
-  this.y = startY;
+  this.id = id;
+  this.position = position;
+  this.destination = destination;
+
+  this.spam = function(){
+    console.log('player ' + this.id + ' is at ' + this.position + 'and moving towards: ' + this.destination);
+  }
+  setInterval(this.spam(), 3000);
   // set player role (includes abilities and modifiers)
-  this.role = role;
+  // this.role = role;
 
   // set players health based on role
-  this.baseHealth = 100;
-  this.maxHealth = this.baseHealth * role.healthModifier;
-  this.health = this.maxHealth;
+  // this.baseHealth = 100;
+  // this.maxHealth = this.baseHealth * role.healthModifier;
+  // this.health = this.maxHealth;
 
 // check if player is alive
+
+
+/*
 this.isAlive(){
   return this.health > 0;
 }
@@ -40,6 +49,7 @@ this.heal(amount){
     this.x = x;
     this.y = y;
   }
+  */
 }
 
 exports.Player = Player;

@@ -1,3 +1,7 @@
 physics was learned from this: http://www.babylonjs-playground.com/#DLBW7#10
 
 http://www.html5gamedevs.com/
+
+Radians: https://en.wikipedia.org/wiki/Radian
+
+heightmap generator = http://nemesis.thewavelength.net/index.php?p=9

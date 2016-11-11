@@ -11,10 +11,22 @@ var updateInterval = 1000;
 
 
 var players = {};
-
+/*
+app.all('*', function(req, res, next){
+  console.log(req);
+  next();
+});
+*/
 app.get('/', function(req, res){
-  //// console.log(req);
+  // console.log(req);
   res.sendFile(__dirname + '/public/index.html');
+});
+
+app.get('/textures/mini-cooper.babylon', function(req, res) {
+  console.log('request was made!!!!');
+    // the user was found and is available in req.user
+
+    res.sendFile(__dirname + "/public/textures/mini_cooper/mini-cooper.babylon");
 });
 
 app.get('/css', function(req, res){
@@ -74,7 +86,7 @@ io.on('connection', function(socket){
 
     socket.broadcast.emit('addOtherPlayer', player);
 
-    socket.on('updatePosition', function(data){
+    socket.on('update', function(data){
         var newData = game.updatePlayerData(socket.id, data);
         // console.log('a player moved \n' + JSON.stringify(newData));
         // socket.broadcast.emit('updatePosition', newData);

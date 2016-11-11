@@ -18,7 +18,8 @@ game.getPlayers = function(){
 }
 
 game.updatePlayerData = function(id, data){
-  game.players[id].position = data;
+  game.players[id].position = data.position;
+  game.players[id].destination = data.destination;
   return game.players[id];
 }
 

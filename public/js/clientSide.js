@@ -1,6 +1,7 @@
 var canvas, engine, scene, light, groundMaterial, groundPlane, ground, freeCam, playerCam, archCam;
 var playerID;
 var players = {};
+var my3dObjects = {};
 
 window.addEventListener('DOMContentLoaded', function(){
 
@@ -10,15 +11,21 @@ window.addEventListener('DOMContentLoaded', function(){
   engine = new BABYLON.Engine(canvas, true);
   // lav en scene
   scene = createScene();
+
+  BABYLON.SceneLoader.ImportMesh("car", "/textures/", "mini-cooper.babylon", scene, function (newMeshes, particleSystems, skeletons) {
+      my3dObjects.car = newMeshes;
+  });
+  console.log(JSON.stringify(my3dObjects.car));
   scene.registerBeforeRender(function(){
       if(scene.isReady()) {
         for (var p in players){
 
           if (BABYLON.Vector3.Distance(players[p].mesh.position, players[p].destination)> 10){
-            // players[p].rotate();
-            players[p].move();
+             players[p].rotate();
+             players[p].move();
           }
         }
+
       }
    });
 
@@ -37,20 +44,23 @@ window.addEventListener('DOMContentLoaded', function(){
 });
 window.addEventListener("click", function () {
   // We try to pick an object
+  // console.log('players orientation: ');
+  // console.log(players[playerID]);
+  console.log(my3dObjects.car);
   var target = scene.pick(scene.pointerX, scene.pointerY);
+  var update = {};
+  // // console.log(target);
 
-  // console.log(target);
-
-  if(target.pickedMesh.name == 'GroundMesh'){
-    socket.emit('updatePosition', target.pickedPoint);
-    console.log('you clicked on ' + target.pickedMesh.name + ' at position ' + target.pickedMesh.position);
-    moveItem(players[playerID], target.pickedPoint);
+  if(target.pickedMesh.name == 'ground'){
+    update.destination = target.pickedPoint;
   }
   else{
-    socket.emit('updatePosition', target.pickedPoint);
-    target.pickedPoint.y ++;
-    moveItem(players[playerID], target.pickedMesh.position);
+    update.destination = target.pickedMesh.getAbsolutePosition();
   }
+  update.position = players[playerID].mesh.getAbsolutePosition();
+  // moveItem(update.destination);
+  socket.emit('update', update);
+  // console.log('object ' + players[playerID].id + ' is at position: ' + JSON.stringify(update.position) + ' and going to ' + JSON.stringify(update.destination));
 
 });
   function removeRemotePlayer(player){
@@ -60,11 +70,12 @@ window.addEventListener("click", function () {
 
 
   function updatePlayerPosition(data){
-  //  console.log('incoming playerposition data: ');
-  //  console.log(JSON.stringify(data));
-  //  console.log('object: ' + data.id);
-  //  console.log('object position: ' + JSON.stringify(data.position));
-    moveItem(players[data.id], data.position);
+
+    // console.log('incoming playerposition data: ');
+    // console.log(JSON.stringify(data));
+  //  // console.log('object: ' + data.id);
+  //  // console.log('object position: ' + JSON.stringify(data.position));
+  //  moveItem(players[data.id], data.position);
     // players[data.id].mesh.position = data.position;
   }
 
@@ -72,64 +83,46 @@ window.addEventListener("click", function () {
 
   }
 
-  // move an item in the world to the target position
-  function moveItem(item, target){
-    //var anim = BABYLON.Animation.CreateAndStartAnimation("anim", item.mesh, "position", 30, 100, item.mesh.position, target, 0);
-/*
-
-    scene.registerBeforeRender(function(){
-		    if(scene.isReady() && meshPlayer) {
-          for (var p in players){
-            if (players[p].mesh.position !== players[p].destination){
-              players[p].rotate();
-              players[p].move();
-            }
-          }
-          if (keys.avancer == 1){	// En avant
-            posX = Math.sin(parseFloat(meshPlayer.rotation.y));
-            posZ = Math.cos(parseFloat(meshPlayer.rotation.y));
-            velocity = new BABYLON.Vector3(parseFloat(posX) / VitessePerso, 0, parseFloat(posZ) / VitessePerso);
-		          meshPlayer.moveWithCollisions(velocity);
-          }
-		    }
-	   });
-*/
-  }
-
-
   function createPlayer(data){
     if (!playerID){
-      console.log('setting playerID to: ' + data.id);
+      // console.log('setting playerID to: ' + data.id);
       playerID = data.id;
     }
 
   }
   function addRemotePlayer(player){
     if (players[player.id]){
-      console.log('addRemotePlayer says: player ' + data.id + ' already exists');
+      // console.log('addRemotePlayer says: player ' + data.id + ' already exists');
     }
     else{
       players[player.id] = player;
-      players[player.id].speed = 20;
+      players[player.id].speed = 0.7;
+      //players[player.id].mesh = my3dObjects.car;
       players[player.id].mesh = BABYLON.Mesh.CreateBox(player.id, 1, scene);
-      players[player.id].mesh.position.y += 60;
+      players[player.id].mesh.position.y += 30;
       players[player.id].mesh.checkCollisions = true;
       players[player.id].collisionRadius = new BABYLON.Vector3(0.01, 0.01, 0.01);
-      players[player.id].physicsImpostor = new BABYLON.PhysicsImpostor(players[player.id].mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 100, restitution: 0.3 }, scene);
+      players[player.id].physicsImpostor = new BABYLON.PhysicsImpostor(players[player.id].mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 100, restitution: 0.2 }, scene);
       players[player.id].move = function(){
         // make it rotate a degree towards target here...
 
-        players[player.id].mesh.rotation.x -= (1/180);
+
 
         // run forrest!
         posX = Math.sin(parseFloat(players[player.id].mesh.rotation.y));
         posZ = Math.cos(parseFloat(players[player.id].mesh.rotation.y));
         velocity = new BABYLON.Vector3(parseFloat(posX) / players[player.id].speed, 0, parseFloat(posZ) / players[player.id].speed);
-          players[player.id].mesh.moveWithCollisions(velocity);
+          players[player.id].physicsImpostor.setLinearVelocity(velocity);
+      }
+      players[player.id].rotate = function(){
+
+        this.mesh.rotation.y -= (1/180);
+        this.physicsImpostor.setAngularVelocity(new BABYLON.Quaternion(0,-2,0,0));
       }
     }
     if (playerID === player.id){
-      changeCameraToPlayer(players[player.id]);
+      changeCameraToPlayer(players[playerID]);
+      addOrientationLines(players[playerID].mesh);
 
     }
   }
@@ -174,7 +167,7 @@ var createScene = function () {
 	var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
 	light.intensity = 0.5;
 
-	archCam = new BABYLON.ArcRotateCamera("Camera", 0, 0.9, 300, BABYLON.Vector3.Zero(), scene);
+	archCam = new BABYLON.ArcRotateCamera("Camera", 0, 0.9, 50, BABYLON.Vector3.Zero(), scene);
 	archCam.attachControl(canvas, true);
 
 	ground = BABYLON.Mesh.CreateGroundFromHeightMap(
@@ -232,3 +225,39 @@ var createScene = function () {
 
 	return scene;
 };
+
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+
+
+
+
+
+
+function addOrientationLines(thing){
+  var size = 15;
+  var pilot_world_local_axisX = BABYLON.Mesh.CreateLines("pilot_world_local_axisX", [
+new BABYLON.Vector3.Zero(), new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, 0.05 * size, 0),
+new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
+], scene);
+pilot_world_local_axisX.color = new BABYLON.Color3(1, 0, 0);
+
+pilot_world_local_axisY = BABYLON.Mesh.CreateLines("pilot_world_local_axisY", [
+  new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(-0.05 * size, size * 0.95, 0),
+  new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(0.05 * size, size * 0.95, 0)
+], scene);
+pilot_world_local_axisY.color = new BABYLON.Color3(0, 1, 0);
+
+var pilot_world_local_axisZ = BABYLON.Mesh.CreateLines("pilot_world_local_axisZ", [
+  new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3( 0 , -0.05 * size, size * 0.95),
+  new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3( 0, 0.05 * size, size * 0.95)
+  ], scene);
+pilot_world_local_axisZ.color = new BABYLON.Color3(0, 0, 1);
+
+
+pilot_world_local_axisX.parent = thing;
+pilot_world_local_axisY.parent = thing;
+pilot_world_local_axisZ.parent = thing;
+}

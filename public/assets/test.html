@@ -1,0 +1,27 @@
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/2.4.1/babylon.js"> </script>
+
+</head>
+<body>
+  <canvas id="renderCanvas"></canvas>
+
+  <script>
+  var canvas = document.getElementById("renderCanvas");
+  var engine = new BABYLON.Engine(canvas, true);
+
+  BABYLON.SceneLoader.Load("", "soldier1.babylon", engine, function(newScene){
+    var Scene = newScene;
+    Scene.executeWhenReady(function(){
+      Scene.activeCamera.attachControl(canvas);
+      engine.runRenderLoop(function(){
+        Scene.render();
+      });
+    });
+  });
+  window.addEventListener("resize", function(){
+    engine.resize();
+  });
+  </script>
+</body>
+</html>

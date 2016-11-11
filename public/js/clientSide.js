@@ -12,6 +12,21 @@ window.addEventListener('DOMContentLoaded', function(){
   // lav en scene
   scene = createScene();
 
+// this loads it
+BABYLON.SceneLoader.Load("/textures/", "mini-cooper.babylon", engine, function (newScene) {
+            // Wait for textures and shaders to be ready
+            newScene.executeWhenReady(function () {
+                // Attach camera to canvas inputs
+                newScene.activeCamera.attachControl(canvas);
+
+                // Once the scene is loaded, just register a render loop to render it
+                engine.runRenderLoop(function() {
+                    newScene.render();
+                });
+            });
+});
+
+// this doesnt Delete above to get map loading
   BABYLON.SceneLoader.ImportMesh("car", "/textures/", "mini-cooper.babylon", scene, function (newMeshes, particleSystems, skeletons) {
       my3dObjects.car = newMeshes;
   });
@@ -28,6 +43,8 @@ window.addEventListener('DOMContentLoaded', function(){
 
       }
    });
+
+
 
 
   //addLocalPlayer();

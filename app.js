@@ -23,7 +23,6 @@ app.get('/', function(req, res){
 });
 
 app.get('/textures/mini-cooper.babylon', function(req, res) {
-  console.log('request was made!!!!');
     // the user was found and is available in req.user
 
     res.sendFile(__dirname + "/public/textures/mini_cooper/mini-cooper.babylon");

@@ -187,14 +187,14 @@ pilot_world_local_axisZ.parent = thing;
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 
-function nativeCannonVehicle(newPlayerID){
+function nativeCannonVehicle(newPlayerID, startPosition){
   //CAR!
   var res ={};
     res.id = newPlayerID;
           res.width = 8;
           res.depth = 8;
           res.height = 1;
-          res.mass = 10;
+          res.mass = 100;
 
           res.wheelDiameter = 5;
           res.wheelDepthPosition = (res.depth + res.wheelDiameter) / 2
@@ -208,7 +208,7 @@ function nativeCannonVehicle(newPlayerID){
               height: res.height,
               depth: res.depth
           }, scene);
-          res.chassis.position.y = res.wheelDiameter + res.height / 2;
+          res.chassis.position.y = res.wheelDiameter + res.height / 2 + 40;
           res.chassis.physicsImpostor = new BABYLON.PhysicsImpostor(res.chassis, BABYLON.PhysicsEngine.BoxImpostor, {
               mass: res.mass
           })
@@ -223,7 +223,7 @@ function nativeCannonVehicle(newPlayerID){
               wheel.position.copyFromFloats(a * res.axisWidth / 2, res.wheelDiameter / 2, b * res.wheelDepthPosition)
               wheel.scaling.x = 0.4;
               wheel.physicsImpostor = new BABYLON.PhysicsImpostor(wheel, BABYLON.PhysicsEngine.SphereImpostor, {
-                  mass: 3
+                  mass: 5
               });
               return wheel;
           });
@@ -265,7 +265,7 @@ function nativeCannonVehicle(newPlayerID){
 
           // Some damping to not spin wheels too fast
           for (var i = 0; i < res.vehicle.wheelBodies.length; i++) {
-              res.vehicle.wheelBodies[i].angularDamping = 0.4;
+              res.vehicle.wheelBodies[i].angularDamping = 0.8;
           }
 
           //add the constraints to the world
@@ -297,14 +297,18 @@ function nativeCannonVehicle(newPlayerID){
           document.onkeyup = handler;
 
           scene.onPointerUp = function() {
-              chassis.physicsImpostor.applyImpulse(new BABYLON.Vector3(100, 100, 0), chassis.getAbsolutePosition())
+              res.chassis.physicsImpostor.applyImpulse(new BABYLON.Vector3(-2000, 3000, 0), res.chassis.getAbsolutePosition())
           }
 
           var maxSteerVal = Math.PI / 6;
           var maxSpeed = 200;
           var maxForce = 200;
-
+// EventHandlers (keys and mouse)
           function handler(event) {
+            if (event.type == 'keydown'){
+              console.log(event.keyCode);
+            }
+            console.log('keyhandler seems to be working!');
               var up = (event.type == 'keyup');
 
               if (!up && event.type !== 'keydown')
@@ -312,29 +316,29 @@ function nativeCannonVehicle(newPlayerID){
 
               switch (event.keyCode) {
 
-                  case 119: // forward
-                      vehicle.setWheelForce(up ? 0 : -maxForce, 0);
-                      vehicle.setWheelForce(up ? 0 : maxForce, 1);
+                  case 87: // forward
+                      res.vehicle.setWheelForce(up ? 0 : -maxForce, 0);
+                      res.vehicle.setWheelForce(up ? 0 : maxForce, 1);
                       break;
 
-                  case 115: // backward
-                      vehicle.setWheelForce(up ? 0 : maxForce / 2, 0);
-                      vehicle.setWheelForce(up ? 0 : -maxForce / 2, 1);
+                  case 83: // backward
+                      res.vehicle.setWheelForce(up ? 0 : maxForce / 2, 0);
+                      res.vehicle.setWheelForce(up ? 0 : -maxForce / 2, 1);
                       break;
 
-                  case 100: // right
-                      vehicle.setSteeringValue(up ? 0 : -maxSteerVal, 2);
-                      vehicle.setSteeringValue(up ? 0 : -maxSteerVal, 3);
+                  case 68: // right
+                      res.vehicle.setSteeringValue(up ? 0 : -maxSteerVal, 2);
+                      res.vehicle.setSteeringValue(up ? 0 : -maxSteerVal, 3);
                       break;
 
-                  case 97: // left
-                      vehicle.setSteeringValue(up ? 0 : maxSteerVal, 2);
-                      vehicle.setSteeringValue(up ? 0 : maxSteerVal, 3);
+                  case 65: // left
+                      res.vehicle.setSteeringValue(up ? 0 : maxSteerVal, 2);
+                      res.vehicle.setSteeringValue(up ? 0 : maxSteerVal, 3);
                       break;
 
               }
           }
-          res.chassis.position.y += 60;
+          //res.chassis.position.y += 1000;
           return res;
         }
 

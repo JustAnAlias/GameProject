@@ -3,6 +3,13 @@ var playerID;
 var players = {};
 var my3dObjects = {};
 
+var keys = {
+  'fwd': 1,
+  'bck': 2,
+  'left': 3,
+  'right': 4
+};
+
 window.addEventListener('DOMContentLoaded', function(){
 
   // get canvas
@@ -70,9 +77,6 @@ function updatePlayerPosition(data){
     // players[data.id].mesh.position = data.position;
 }
 
-function rotateItem(item, direction){
-
-}
 
 function createPlayer(data){
   if (!playerID){
@@ -87,47 +91,21 @@ function addRemotePlayer(player){
   }
   else{
     players[player.id] = player;
-    players[player.id].mesh = playerObject(player.id);
-    // players[player.id].mesh.body.translate(new BABYLON.Vector3(0,15,0), 10, BABYLON.Space.WORLD);
+    players[player.id] = nativeCannonVehicle(player.id);
 
-
-    /*
-    original code here:
-    players[player.id] = player;
-    players[player.id].speed = 0.7;
-    //players[player.id].mesh = my3dObjects.car;
-    players[player.id].mesh = BABYLON.Mesh.CreateBox(player.id, 1, scene);
-    players[player.id].mesh.position.y += 30;
-    players[player.id].mesh.checkCollisions = true;
-    players[player.id].collisionRadius = new BABYLON.Vector3(0.01, 0.01, 0.01);
-    players[player.id].physicsImpostor = new BABYLON.PhysicsImpostor(players[player.id].mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 100, restitution: 0.2 }, scene);
-    players[player.id].move = function(){
-      // make it rotate a degree towards target here...
-
-        // run forrest!
-      posX = Math.sin(parseFloat(players[player.id].mesh.rotation.y));
-      posZ = Math.cos(parseFloat(players[player.id].mesh.rotation.y));
-      velocity = new BABYLON.Vector3(parseFloat(posX) / players[player.id].speed, 0, parseFloat(posZ) / players[player.id].speed);
-        players[player.id].physicsImpostor.setLinearVelocity(velocity);
-    }
-    players[player.id].rotate = function(){
-        this.mesh.rotation.y -= (1/180);
-      this.physicsImpostor.setAngularVelocity(new BABYLON.Quaternion(0,-2,0,0));
-    }
-    */
   }
 
   if (playerID === player.id){
+    archCam.target = new BABYLON.Vector3(0, 0, 0);
     changeCameraToPlayer(players[playerID]);
-    addOrientationLines(players[playerID].mesh.body);
+
   }
 }
 
-  function changeCameraToPlayer(thePlayer){
-    scene.activeCamera = archCam;
-    archCam.target = thePlayer.mesh.body;
-
-  }
+function changeCameraToPlayer(thePlayer){
+  scene.activeCamera = archCam;
+  archCam.target = thePlayer.chassis;
+}
 
 
   function destroyPlayer(){
@@ -151,7 +129,7 @@ var createScene = function () {
 	light.intensity = 0.5;
 
 	archCam = new BABYLON.ArcRotateCamera("Camera", 0, 0.9, 50, BABYLON.Vector3.Zero(), scene);
-	archCam.attachControl(canvas, true);
+	archCam.attachControl(canvas, false);
 
 	ground = BABYLON.Mesh.CreateGroundFromHeightMap(
 		"ground",
@@ -173,7 +151,7 @@ var createScene = function () {
 
 
 function addOrientationLines(thing){
-  var size = 15;
+  var size = 20;
   var pilot_world_local_axisX = BABYLON.Mesh.CreateLines("pilot_world_local_axisX", [
 new BABYLON.Vector3.Zero(), new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, 0.05 * size, 0),
 new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
@@ -198,6 +176,218 @@ pilot_world_local_axisY.parent = thing;
 pilot_world_local_axisZ.parent = thing;
 }
 
+
+
+
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+
+function nativeCannonVehicle(newPlayerID){
+  //CAR!
+  var res ={};
+    res.id = newPlayerID;
+          res.width = 8;
+          res.depth = 8;
+          res.height = 1;
+          res.mass = 10;
+
+          res.wheelDiameter = 5;
+          res.wheelDepthPosition = (res.depth + res.wheelDiameter) / 2
+
+          res.axisWidth = res.width + res.wheelDiameter;
+
+          var centerOfMassAdjust = new CANNON.Vec3(0, -res.wheelDiameter, 0);
+
+          res.chassis = BABYLON.MeshBuilder.CreateBox("chassis", {
+              width: res.width,
+              height: res.height,
+              depth: res.depth
+          }, scene);
+          res.chassis.position.y = res.wheelDiameter + res.height / 2;
+          res.chassis.physicsImpostor = new BABYLON.PhysicsImpostor(res.chassis, BABYLON.PhysicsEngine.BoxImpostor, {
+              mass: res.mass
+          })
+          // archCam.target = res.chassis;
+          res.wheels = [0, 1, 2, 3].map(function(num) {
+              var wheel = BABYLON.MeshBuilder.CreateSphere("wheel" + num, {
+                  segments: 4,
+                  diameter: res.wheelDiameter
+              }, scene);
+              var a = (num % 2) ? -1 : 1;
+              var b = num < 2 ? 1 : -1;
+              wheel.position.copyFromFloats(a * res.axisWidth / 2, res.wheelDiameter / 2, b * res.wheelDepthPosition)
+              wheel.scaling.x = 0.4;
+              wheel.physicsImpostor = new BABYLON.PhysicsImpostor(wheel, BABYLON.PhysicsEngine.SphereImpostor, {
+                  mass: 3
+              });
+              return wheel;
+          });
+
+          res.vehicle = new CANNON.RigidVehicle({
+              chassisBody: res.chassis.physicsImpostor.physicsBody
+          });
+
+
+          var down = new CANNON.Vec3(0, -1, 0);
+
+          res.vehicle.addWheel({
+              body: res.wheels[0].physicsImpostor.physicsBody,
+              position: new CANNON.Vec3(res.axisWidth / 2, 0, res.wheelDepthPosition).vadd(centerOfMassAdjust),
+              axis: new CANNON.Vec3(1, 0, 0),
+              direction: down
+          });
+
+          res.vehicle.addWheel({
+              body: res.wheels[1].physicsImpostor.physicsBody,
+              position: new CANNON.Vec3(-res.axisWidth / 2, 0, res.wheelDepthPosition).vadd(centerOfMassAdjust),
+              axis: new CANNON.Vec3(-1, 0, -0),
+              direction: down
+          });
+
+          res.vehicle.addWheel({
+              body: res.wheels[2].physicsImpostor.physicsBody,
+              position: new CANNON.Vec3(res.axisWidth / 2, 0, -res.wheelDepthPosition).vadd(centerOfMassAdjust),
+              axis: new CANNON.Vec3(1, 0, 0),
+              direction: down
+          });
+
+          res.vehicle.addWheel({
+              body: res.wheels[3].physicsImpostor.physicsBody,
+              position: new CANNON.Vec3(-res.axisWidth / 2, 0, -res.wheelDepthPosition).vadd(centerOfMassAdjust),
+              axis: new CANNON.Vec3(-1, 0, 0),
+              direction: down
+          });
+
+          // Some damping to not spin wheels too fast
+          for (var i = 0; i < res.vehicle.wheelBodies.length; i++) {
+              res.vehicle.wheelBodies[i].angularDamping = 0.4;
+          }
+
+          //add the constraints to the world
+          var world = res.wheels[3].physicsImpostor.physicsBody.world
+
+          for (var i = 0; i < res.vehicle.constraints.length; i++) {
+              world.addConstraint(res.vehicle.constraints[i]);
+          }
+
+          res.setSteeringValue = function(value, wheelIndex) {
+              // Set angle of the hinge axis
+              var axis = this.wheelAxes[wheelIndex];
+
+              var c = Math.cos(value),
+                  s = Math.sin(value),
+                  x = axis.x,
+                  z = axis.z;
+              this.constraints[wheelIndex].axisA.set(
+                  c * x - s * z,
+                  0,
+                  s * x + c * z
+              );
+          };
+          res.vehicle.setSteeringValue = res.setSteeringValue.bind(res.vehicle);
+
+          world.addEventListener('preStep', res.vehicle._update.bind(res.vehicle));
+
+          document.onkeydown = handler;
+          document.onkeyup = handler;
+
+          scene.onPointerUp = function() {
+              chassis.physicsImpostor.applyImpulse(new BABYLON.Vector3(100, 100, 0), chassis.getAbsolutePosition())
+          }
+
+          var maxSteerVal = Math.PI / 6;
+          var maxSpeed = 200;
+          var maxForce = 200;
+
+          function handler(event) {
+              var up = (event.type == 'keyup');
+
+              if (!up && event.type !== 'keydown')
+                  return;
+
+              switch (event.keyCode) {
+
+                  case 119: // forward
+                      vehicle.setWheelForce(up ? 0 : -maxForce, 0);
+                      vehicle.setWheelForce(up ? 0 : maxForce, 1);
+                      break;
+
+                  case 115: // backward
+                      vehicle.setWheelForce(up ? 0 : maxForce / 2, 0);
+                      vehicle.setWheelForce(up ? 0 : -maxForce / 2, 1);
+                      break;
+
+                  case 100: // right
+                      vehicle.setSteeringValue(up ? 0 : -maxSteerVal, 2);
+                      vehicle.setSteeringValue(up ? 0 : -maxSteerVal, 3);
+                      break;
+
+                  case 97: // left
+                      vehicle.setSteeringValue(up ? 0 : maxSteerVal, 2);
+                      vehicle.setSteeringValue(up ? 0 : maxSteerVal, 3);
+                      break;
+
+              }
+          }
+          res.chassis.position.y += 60;
+          return res;
+        }
+
+
+
+
+
+
+
+
+
+/*
+			var ball;
+			var ballbody;
+			var createBall = function () {
+				ball = BABYLON.Mesh.CreateSphere("s", 8, 14, scene);
+				ball.position.y = 160;
+				ball.position.x = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
+				ball.position.z = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
+				ball.material = new BABYLON.StandardMaterial("ballmat", scene);
+				ball.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+				return ball.setPhysicsState(BABYLON.PhysicsEngine.SphereImpostor, {
+					mass: 1,
+					friction: 0,
+					restitution: .5
+				});
+			}
+
+			var ballbody = createBall();
+			var power = 20;  // impulsing power.
+
+			scene.onPointerUp = function (evt, pickInfo) {
+				if (pickInfo.pickedMesh.name === "s") {
+					pickInfo.pickedMesh.applyImpulse(
+						pickInfo.pickedMesh.position.subtract(camera.position).normalize().scale(power), // dir & magnitude
+						pickInfo.pickedPoint // impact point on the mesh
+						)
+				}
+			}
+
+			scene.registerBeforeRender(function () {
+				if (ball.position.y < 0) {
+					ball.position.y = 160;
+					ball.position.x = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
+					ball.position.z = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
+					ball.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+					ball.updatePhysicsBodyPosition();
+				}
+			});
+
+
+
+//---------------- MORE UNUSED CODE -----------------
 
 function playerObject(playerNumber, startPos){
   var rad = 8;
@@ -346,64 +536,21 @@ function playerObject(playerNumber, startPos){
       }
       else{
         car.isMoving = true;
-        car.drive(1000);
+        car.drive(300);
       }
     }
     return car;
 }
 
+//---------------- MORE UNUSED CODE -----------------
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-			var ball;
-			var ballbody;
-			var createBall = function () {
-				ball = BABYLON.Mesh.CreateSphere("s", 8, 14, scene);
-				ball.position.y = 160;
-				ball.position.x = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
-				ball.position.z = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
-				ball.material = new BABYLON.StandardMaterial("ballmat", scene);
-				ball.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
-				return ball.setPhysicsState(BABYLON.PhysicsEngine.SphereImpostor, {
-					mass: 1,
-					friction: 0,
-					restitution: .5
-				});
-			}
-
-			var ballbody = createBall();
-			var power = 20;  // impulsing power.
-
-			scene.onPointerUp = function (evt, pickInfo) {
-				if (pickInfo.pickedMesh.name === "s") {
-					pickInfo.pickedMesh.applyImpulse(
-						pickInfo.pickedMesh.position.subtract(camera.position).normalize().scale(power), // dir & magnitude
-						pickInfo.pickedPoint // impact point on the mesh
-						)
-				}
-			}
-
-			scene.registerBeforeRender(function () {
-				if (ball.position.y < 0) {
-					ball.position.y = 160;
-					ball.position.x = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
-					ball.position.z = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
-					ball.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
-					ball.updatePhysicsBodyPosition();
-				}
-			});
 */
+
+
+
+
+
+
 // end of file

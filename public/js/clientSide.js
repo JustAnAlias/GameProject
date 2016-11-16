@@ -37,8 +37,10 @@ window.addEventListener('DOMContentLoaded', function(){
     scene.render();
   });
 });
+
+/*
 window.addEventListener("click", function () {
-  players[playerID].mesh.toggle();
+  // players[playerID].mesh.toggle();
   // We try to pick an object
   // console.log('players orientation: ');
   // console.log(players[playerID]);
@@ -60,6 +62,7 @@ window.addEventListener("click", function () {
   // console.log('object ' + players[playerID].id + ' is at position: ' + JSON.stringify(update.position) + ' and going to ' + JSON.stringify(update.destination));
 
 });
+*/
 
 function removeRemotePlayer(player){
     players[player.id].mesh.dispose();
@@ -92,13 +95,12 @@ function addRemotePlayer(player){
   else{
     players[player.id] = player;
     players[player.id] = nativeCannonVehicle(player.id);
-
   }
 
   if (playerID === player.id){
     archCam.target = new BABYLON.Vector3(0, 0, 0);
     changeCameraToPlayer(players[playerID]);
-
+    addControls();
   }
 }
 
@@ -108,10 +110,10 @@ function changeCameraToPlayer(thePlayer){
 }
 
 
-  function destroyPlayer(){
-    player.mesh.dispose();
-    // then what?
-  }
+function destroyPlayer(){
+  player.mesh.dispose();
+  // then what?
+}
 
 
 var createScene = function () {
@@ -133,49 +135,47 @@ var createScene = function () {
 			var ground2 = ground.clone();
 			ground2.material = new BABYLON.StandardMaterial("wire", scene);
       ground2.material.diffuseTexture = new BABYLON.Texture("/gras1.jpg", scene);
-      // ground2.material.diffuseColor = BABYLON.Color3.Black();
-			// ground2.material.wireframe = true;
-
-			var gbody = ground.setPhysicsState(BABYLON.PhysicsEngine.HeightmapImpostor, { mass: 0, friction: 20 });
-
+			var gbody = ground.setPhysicsState(BABYLON.PhysicsEngine.HeightmapImpostor, { mass: 0, friction: 10 });
 		} // end of callback
 	);
+
   var materialbox2 = new BABYLON.StandardMaterial("texture2", scene);
     // materialbox2.diffuseTexture = new BABYLON.Texture("carx/palm_s.png", scene);
-    materialbox2.specularColor = new BABYLON.Color3(0, 0, 0);
-  bor = new Array(4);
-    var boxShape411 = new CANNON.Box(new CANNON.Vec3(298, 4, 300));
-    for (var i = 0; i < bor.length; i++) {
-        bor[i] = new CANNON.Body(0, boxShape411);
-        if (i == 0) bor[i].position.y = 300; else if (i == 1) bor[i].position.y = -300; else bor[i].position.y = 0;
-        if (i == 2) bor[i].position.x = 300; else if (i == 3) bor[i].position.x = -300; else bor[i].position.x = 0;
-        bor[i].position.z = 50;
-        if (i > 1) bor[i].quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI/2);
-        world.add(bor[i]);
-    }
+  materialbox2.specularColor = new BABYLON.Color3(0, 0, 0);
 
-bord = new Array(bor.length);
-    bord[0] = new BABYLON.Mesh.CreateBox("bord1", 1, scene);
-    bord[0].scaling = new BABYLON.Vector3(602, 10, 2);
-    bord[0].visibility = 0.3;
-    bord[0].material = materialbox2;
-    bord[1] = bord[0].clone();
-    bord[2] = bord[0].clone();
-    bord[3] = bord[0].clone();
-for (i = 0; i < bor.length; i++) {
+  bor = new Array(4);
+  var boxShape411 = new CANNON.Box(new CANNON.Vec3(298, 4, 300));
+  for (var i = 0; i < bor.length; i++) {
+    bor[i] = new CANNON.Body(0, boxShape411);
+    if (i == 0){
+      bor[i].position.y = 300;
+    }
+    else if (i == 1){
+      bor[i].position.y = -300;
+    }
+    else {
+      bor[i].position.y = 0;
+    }
+    if (i == 2) bor[i].position.x = 300; else if (i == 3) bor[i].position.x = -300; else bor[i].position.x = 0;
+    bor[i].position.z = 50;
+    if (i > 1) bor[i].quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI/2);
+      world.add(bor[i]);
+  }
+
+  bord = new Array(bor.length);
+  bord[0] = new BABYLON.Mesh.CreateBox("bord1", 1, scene);
+  bord[0].scaling = new BABYLON.Vector3(602, 10, 2);
+  bord[0].visibility = 0.3;
+  bord[0].material = materialbox2;
+  bord[1] = bord[0].clone();
+  bord[2] = bord[0].clone();
+  bord[3] = bord[0].clone();
+
+  for (i = 0; i < bor.length; i++) {
     bord[i].position = new BABYLON.Vector3(bor[i].position.x, bor[i].position.z - 50, bor[i].position.y);
     bord[i].rotationQuaternion = new BABYLON.Quaternion(bor[i].quaternion.x, bor[i].quaternion.z, bor[i].quaternion.y, -bor[i].quaternion.w);
-}
-
-
-
-
-
-
-
-
-
-	return scene;
+  }
+  return scene;
 };
 
 
@@ -210,421 +210,269 @@ function nativeCannonVehicle(newPlayerID, startPosition){
   res.id = newPlayerID;
   res.width = 8;
   res.depth = 8;
-  res.height = 1;
+  res.height = 3;
   res.mass = 40;
   res.wheelDiameter = 5;
-  res.wheelDepthPosition = (res.depth + res.wheelDiameter) / 2
+  res.wheelDepthPosition = (res.depth + res.wheelDiameter) / 2;
   res.axisWidth = res.width + res.wheelDiameter;
   res.chassis = BABYLON.MeshBuilder.CreateBox("chassis", {
-              width: res.width,
-              height: res.height,
-              depth: res.depth
-          }, scene);
+    width: res.width,
+    height: res.height,
+    depth: res.depth
+  }, scene);
   res.chassis.position.y = res.wheelDiameter + 40;
 
-//          res.chassis.position.y = res.wheelDiameter + res.height / 2 + 40;
+
   res.chassis.physicsImpostor = new BABYLON.PhysicsImpostor(res.chassis, BABYLON.PhysicsEngine.BoxImpostor, {
     mass: res.mass
   });
+  //
   var centerOfMassAdjust = new CANNON.Vec3(0, -res.wheelDiameter, 0);
-  // archCam.target = res.chassis;
+  // add wheels
   res.wheels = [0, 1, 2, 3].map(function(num) {
-    var wheel = BABYLON.MeshBuilder.CreateSphere("wheel" + num,
-      { segments: 4,
-        diameter: res.wheelDiameter
-      }, scene);
+    var wheel = BABYLON.MeshBuilder.CreateSphere("wheel" + num,{
+      segments: 4,
+      diameter: res.wheelDiameter
+    }, scene);
     var a = (num % 2) ? -1 : 1;
     var b = num < 2 ? 1 : -1;
-    wheel.position.copyFromFloats(a * res.axisWidth / 2, res.wheelDiameter / 2, b * res.wheelDepthPosition);
+    wheel.position.copyFromFloats(a * res.axisWidth / 2, res.wheelDiameter / 2, b * res.wheelDepthPosition)
     wheel.scaling.x = 0.4;
-    wheel.physicsImpostor = new BABYLON.PhysicsImpostor(wheel, BABYLON.PhysicsEngine.SphereImpostor,
-      { mass: 10 });
+    wheel.physicsImpostor = new BABYLON.PhysicsImpostor(wheel, BABYLON.PhysicsEngine.SphereImpostor,{
+      mass: 10
+    });
     return wheel;
   });
 
-  res.vehicle = new CANNON.RigidVehicle(
-    {
-      chassisBody: res.chassis.physicsImpostor.physicsBody
-    }
-  );
+  res.vehicle = new CANNON.RigidVehicle({
+    chassisBody: res.chassis.physicsImpostor.physicsBody
+  });
   var down = new CANNON.Vec3(0, -1, 0);
 
-  res.vehicle.addWheel(
-    {
-      body: res.wheels[0].physicsImpostor.physicsBody,
-      position: new CANNON.Vec3(res.axisWidth / 2, 0, res.wheelDepthPosition).vadd(centerOfMassAdjust),
-      axis: new CANNON.Vec3(1, 0, 0),
-      direction: down,
-      friction: 20,
-      suspensionLength: 1
-    }
-  );
+  res.vehicle.addWheel({
+    body: res.wheels[0].physicsImpostor.physicsBody,
+    position: new CANNON.Vec3(res.axisWidth / 2, 0, res.wheelDepthPosition).vadd(centerOfMassAdjust),
+    axis: new CANNON.Vec3(1, 0, 0),
+    direction: down,
+    friction: 20,
+    suspensionLength: 1
+  });
 
-      res.vehicle.addWheel(
-        {
-          body: res.wheels[1].physicsImpostor.physicsBody,
-          position: new CANNON.Vec3(-res.axisWidth / 2, 0, res.wheelDepthPosition).vadd(centerOfMassAdjust),
-          axis: new CANNON.Vec3(-1, 0, -0),
-          direction: down,
-          friction: 20,
-          suspensionLength: 1
-        }
-      );
+  res.vehicle.addWheel({
+    body: res.wheels[1].physicsImpostor.physicsBody,
+    position: new CANNON.Vec3(-res.axisWidth / 2, 0, res.wheelDepthPosition).vadd(centerOfMassAdjust),
+    axis: new CANNON.Vec3(-1, 0, -0),
+    direction: down,
+    friction: 20,
+    suspensionLength: 1
+  });
 
-          res.vehicle.addWheel(
-            {
-              body: res.wheels[2].physicsImpostor.physicsBody,
-              position: new CANNON.Vec3(res.axisWidth / 2, 0, -res.wheelDepthPosition).vadd(centerOfMassAdjust),
-              axis: new CANNON.Vec3(1, 0, 0),
-              direction: down,
-              friction: 20,
-              suspensionLength: 1
-            }
-          );
+  res.vehicle.addWheel({
+    body: res.wheels[2].physicsImpostor.physicsBody,
+    position: new CANNON.Vec3(res.axisWidth / 2, 0, -res.wheelDepthPosition).vadd(centerOfMassAdjust),
+    axis: new CANNON.Vec3(1, 0, 0),
+    direction: down,
+    friction: 20,
+    suspensionLength: 1
+  });
 
-          res.vehicle.addWheel(
-            {
-              body: res.wheels[3].physicsImpostor.physicsBody,
-              position: new CANNON.Vec3(-res.axisWidth / 2, 0, -res.wheelDepthPosition).vadd(centerOfMassAdjust),
-              axis: new CANNON.Vec3(-1, 0, 0),
-              direction: down,
-              friction: 20,
-              suspensionLength: 1
-            }
-          );
+  res.vehicle.addWheel({
+    body: res.wheels[3].physicsImpostor.physicsBody,
+    position: new CANNON.Vec3(-res.axisWidth / 2, 0, -res.wheelDepthPosition).vadd(centerOfMassAdjust),
+    axis: new CANNON.Vec3(-1, 0, 0),
+    direction: down,
+    friction: 20,
+    suspensionLength: 1
+  });
 
-          // Some damping to not spin wheels too fast
-          for (var i = 0; i < res.vehicle.wheelBodies.length; i++) {
-            res.vehicle.wheelBodies[i].angularDamping = 0.2;
-          }
+  // Some damping to not spin wheels too fast
+  for (var i = 0; i < res.vehicle.wheelBodies.length; i++) {
+    res.vehicle.wheelBodies[i].angularDamping = 0.2;
+  }
 
           //add the constraints to the world
-          var world = res.wheels[3].physicsImpostor.physicsBody.world;
+  var world = res.wheels[3].physicsImpostor.physicsBody.world;
 
-          for (var i = 0; i < res.vehicle.constraints.length; i++)
-          {
-            world.addConstraint(res.vehicle.constraints[i]);
-          }
+  for (var i = 0; i < res.vehicle.constraints.length; i++){
+    world.addConstraint(res.vehicle.constraints[i]);
+  }
 
-          res.setSteeringValue = function(value, wheelIndex)
-          {
-            // Set angle of the hinge axis
-            var axis = this.wheelAxes[wheelIndex];
-            var c = Math.cos(value),
-                s = Math.sin(value),
-                x = axis.x,
-                z = axis.z;
-            this.constraints[wheelIndex].axisA.set(
-              c * x - s * z,
-              0,
-              s * x + c * z
-            );
-          };
-          res.vehicle.setSteeringValue = res.setSteeringValue.bind(res.vehicle);
+  res.setSteeringValue = function(value, wheelIndex){
+    // Set angle of the hinge axis
+    var axis = this.wheelAxes[wheelIndex];
+    var c = Math.cos(value),
+        s = Math.sin(value),
+        x = axis.x,
+        z = axis.z;
+    this.constraints[wheelIndex].axisA.set(
+      c * x - s * z,
+      0,
+      s * x + c * z
+    );
+  };
+  res.vehicle.setSteeringValue = res.setSteeringValue.bind(res.vehicle);
+  world.addEventListener('preStep', res.vehicle._update.bind(res.vehicle));
+  var turnPerTick = Math.PI /100;
+  var steerVal = 0;
+  var maxSteerVal = Math.PI / 6;
+  var maxSpeed = 200;
+  var maxForce = 300;
+  var steerLeft = false;
+  var steerRight = false;
+  var forwards = false;
+  var backwards = false;
+  var handbrake = true;
+  setInterval(function(){
+    if (forwards){
+      res.vehicle.setWheelForce(-maxForce, 0);
+      res.vehicle.setWheelForce(maxForce, 1);
+    }
+    else if (backwards){
+      res.vehicle.setWheelForce(maxForce / 2, 0);
+      res.vehicle.setWheelForce(-maxForce / 2, 1);
+    }
+    else{
+      res.vehicle.setWheelForce(0, 0);
+      res.vehicle.setWheelForce(0, 1);
+    }
+    if(steerLeft){
+      steerVal = Math.min(steerVal+= turnPerTick, maxSteerVal);
+    }
+    else if (steerRight) {
+      steerVal = Math.max(steerVal-= turnPerTick, 0-maxSteerVal);
+    }
+    else{
+      if (steerVal < 0 - turnPerTick){
+        steerVal += turnPerTick;
+      }
+      else if (steerVal > 0 + turnPerTick){
+        steerVal -= turnPerTick;
+      }
+      else {
+          steerVal = 0;
+      }
+    }
+    res.vehicle.setSteeringValue(steerVal, 2);
+    res.vehicle.setSteeringValue(steerVal, 3);
+  }, 50);
 
-          world.addEventListener('preStep', res.vehicle._update.bind(res.vehicle));
+  res.turnLeft = function(){
+    steerLeft = true;
+  }
 
-          document.onkeydown = handler;
-          document.onkeyup = handler;
-/*
-          scene.onPointerUp = function()
-          {
-            res.chassis.physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 30, res.mass * 100, res.mass * 1), res.chassis.getAbsolutePosition())
-          }
+  res.noTurnLeft = function(){
+    steerLeft = false;
+  }
 
-*/
-          var turnPerTick = Math.PI /100;
-          var steerVal = 0;
-          var maxSteerVal = Math.PI / 6;
-          var maxSpeed = 200;
-          var maxForce = 300;
-          var steerLeft = false;
-          var steerRight = false;
-          setInterval(function(){
+  res.turnRight = function(){
+    steerRight = true;
+  }
 
-            if(steerLeft){
-              steerVal = Math.min(steerVal+= turnPerTick, maxSteerVal);
-            }
-            else if (steerRight) {
-              steerVal = Math.max(steerVal-= turnPerTick, 0-maxSteerVal);
-            }
-            else{
-              if (steerVal < 0 - turnPerTick){
-                steerVal += turnPerTick;
-              }
-              else if (steerVal > 0 + turnPerTick){
-                steerVal -= turnPerTick;
-              }
-              else {
-                steerVal = 0;
-              }
-            }
-            res.vehicle.setSteeringValue(steerVal, 2);
-            res.vehicle.setSteeringValue(steerVal, 3);
+  res.noTurnRight = function(){
+    steerRight = false;
+  }
 
-          }, 50);
-// EventHandlers (keys and mouse)
-          function handler(event) {
-            var down = (event.type == 'keydown');
-            var up = (event.type == 'keyup');
-            // console.log('keyhandler seems to be working!');
-            if (!up && !down){
-              return;
-            }
-            console.log('you pressed: ' + event.keyCode);
-            switch (event.keyCode) {
-              case 87: // forward
-                res.vehicle.setWheelForce(up ? 0 : -maxForce, 0);
-                res.vehicle.setWheelForce(up ? 0 : maxForce, 1);
-                break;
+  res.accellerate = function(){
+    forwards = true;
+  }
 
-              case 83: // backward
-                res.vehicle.setWheelForce(up ? 0 : maxForce / 2, 0);
-                res.vehicle.setWheelForce(up ? 0 : -maxForce / 2, 1);
-                break;
+  res.noAccellerate = function(){
+    forwards = false;
+  }
 
-              case 68: // right
-                if (down){
-                  steerRight = true;
-                }
-                else{
-                  steerRight = false;
-                  // console.log('stopped steering right!');
-                }
+  res.decellerate = function(){
+    backwards = true;
+  }
 
-                break;
+  res.noDecellerate = function(){
+    backwards = false;
+  }
 
-              case 65: // left
-              if (down){
-                steerLeft = true;
-              }
-              else{
-                steerLeft = false;
-                // console.log('stopped steering left!');
-              }
-                break;
-              case 70:
-                res.wheels[3].physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 0, res.mass * 7, res.mass * 0), res.wheels[3].getAbsolutePosition());
-                res.wheels[2].physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 0, res.mass * 7, res.mass * 0), res.wheels[2].getAbsolutePosition());
-              }
-            }
-            //res.chassis.position.y += 1000;
-            return res;
+  res.handBrakeOn = function(){
+    for (var i = 0; i < res.vehicle.wheelBodies.length; i++) {
+      res.vehicle.wheelBodies[i].angularDamping = 1;
+      res.vehicle.wheelBodies[i].friction = 1000;
+    }
+  }
+
+  res.handbrakeOff = function(){
+    for (var i = 0; i < res.vehicle.wheelBodies.length; i++) {
+      res.vehicle.wheelBodies[i].angularDamping = 0.2;
+      res.vehicle.wheelBodies[i].friction = 20;
+    }
+  }
+
+  res.flipVehicle = function(){
+    res.wheels[3].physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 0, res.mass * 6, res.mass * 0), res.wheels[3].getAbsolutePosition());
+    res.wheels[2].physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 0, res.mass * 6, res.mass * 0), res.wheels[2].getAbsolutePosition());
+  }
+  return res;
 }
 
 
+// player controls goes here:
 
+function addControls(){
+  document.onkeydown = handler;
+  document.onkeyup = handler;
 
-
-
-
-
-
-/*
-			var ball;
-			var ballbody;
-			var createBall = function () {
-				ball = BABYLON.Mesh.CreateSphere("s", 8, 14, scene);
-				ball.position.y = 160;
-				ball.position.x = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
-				ball.position.z = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
-				ball.material = new BABYLON.StandardMaterial("ballmat", scene);
-				ball.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
-				return ball.setPhysicsState(BABYLON.PhysicsEngine.SphereImpostor, {
-					mass: 1,
-					friction: 0,
-					restitution: .5
-				});
-			}
-
-			var ballbody = createBall();
-			var power = 20;  // impulsing power.
-
-			scene.onPointerUp = function (evt, pickInfo) {
-				if (pickInfo.pickedMesh.name === "s") {
-					pickInfo.pickedMesh.applyImpulse(
-						pickInfo.pickedMesh.position.subtract(camera.position).normalize().scale(power), // dir & magnitude
-						pickInfo.pickedPoint // impact point on the mesh
-						)
-				}
-			}
-
-			scene.registerBeforeRender(function () {
-				if (ball.position.y < 0) {
-					ball.position.y = 160;
-					ball.position.x = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
-					ball.position.z = (Math.random() * 50) * ((Math.random() < 0.5) ? -1 : 1);
-					ball.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
-					ball.updatePhysicsBodyPosition();
-				}
-			});
-
-
-
-//---------------- MORE UNUSED CODE -----------------
-
-function playerObject(playerNumber, startPos){
-  var rad = 8;
-    var h = 2;
-    var w = 5;
-    var d = 10;
-    var car = {};
-
-    car.body = BABYLON.MeshBuilder.CreateBox("body", {
-        width: (w + 10) * 1.5,
-        height: h,
-        depth: (d + 17) * 1.5
-    }, scene);
-    car.body.position.x = 0;
-    car.body.position.y = 30;
-    car.body.position.z = 0;
-    // copyFromFloats(0, (h * 0.5) + rad, 0);
-    //Wheels
-    car.wheel1 = BABYLON.MeshBuilder.CreateSphere("wheel1", {
-        diameterY: rad,
-        diameterX: rad/2,
-        diameterZ: rad,
-        segments: 5
-    }, scene);
-    car.wheel1.position.copyFromFloats(-w, car.body.position.y-5, -d);
-
-    car.wheel2 = BABYLON.MeshBuilder.CreateSphere("wheel2", {
-        diameterY: rad,
-        diameterX: rad/2,
-        diameterZ: rad,
-        segments: 5
-    }, scene);
-    car.wheel2.position.copyFromFloats(w, car.body.position.y-5, -d);
-
-    car.wheel3 = BABYLON.MeshBuilder.CreateSphere("wheel3", {
-        diameterY: rad,
-        diameterX: rad / 2,
-        diameterZ: rad,
-        segments: 5
-    }, scene);
-    car.wheel3.position.copyFromFloats(-w, car.body.position.y-5, d);
-
-    car.wheel4 = BABYLON.MeshBuilder.CreateSphere("wheel4", {
-        diameterY: rad,
-        diameterX: rad / 2,
-        diameterZ: rad,
-        segments: 5
-    }, scene);
-    car.wheel4.position.copyFromFloats(w, car.body.position.y-5, d);
-
-
-
-    car.body.physicsImpostor = new BABYLON.PhysicsImpostor(car.body, BABYLON.PhysicsImpostor.BoxImpostor, {
-        mass: 130,
-        friction: 0.5,
-        restitution: 0.5,
-        nativeOptions: {
-            noSleep: true,
-            //move: true
-        }
-    });
-
-    [car.wheel3, car.wheel4].forEach(function(w) {
-        w.physicsImpostor = new BABYLON.PhysicsImpostor(w, BABYLON.PhysicsImpostor.SphereImpostor, {
-            mass: 1,
-            friction: 4,
-            restitution: 0.5,
-            nativeOptions: {
-                move: true
-            }
-        });
-    })
-
-    w = 7;
-
-    [car.wheel1, car.wheel2].forEach(function (w) {
-        w.physicsImpostor = new BABYLON.PhysicsImpostor(w, BABYLON.PhysicsImpostor.SphereImpostor, {
-            mass: 1,
-            friction: 1,
-            restitution: 0.5,
-            nativeOptions: {
-                //move: true
-            }
-        });
-    })
-
-    //Joints
-    car.joint1 = new BABYLON.Hinge2Joint({
-        mainPivot: new BABYLON.Vector3(-w, car.body.position.y-30, -(d-2)),
-        mainAxis: new BABYLON.Vector3(car.body.position.x-10, car.body.position.y-30, 0),
-        connectedAxis: new BABYLON.Vector3(10, 0, 0),
-		nativeParams: {
-            limit: [0, 0],
-            spring: [1000, 1]
-        }
-    });
-    car.body.physicsImpostor.addJoint(car.wheel1.physicsImpostor, car.joint1);
-
-    car.joint2 = new BABYLON.Hinge2Joint({
-        mainPivot: new BABYLON.Vector3(w, car.body.position.y-30, -(d-2)),
-        mainAxis: new BABYLON.Vector3(car.body.position.x-10, car.body.position.y-30, 0),
-        connectedAxis: new BABYLON.Vector3(-10, 0, 0),
-        nativeParams: {
-            limit: [0, 0],
-            spring: [1000, 1]
-        }
-    });
-    car.body.physicsImpostor.addJoint(car.wheel2.physicsImpostor, car.joint2);
-
-    car.joint3 = new BABYLON.Hinge2Joint({
-        mainPivot: new BABYLON.Vector3(-w, car.body.position.y-30, d),
-        mainAxis: new BABYLON.Vector3(0, car.body.position.y-30, -10),
-        connectedAxis: new BABYLON.Vector3(0, car.body.position.y-30, 0),
-        nativeParams: {
-            limit: [0, 0],
-            spring: [100, 1]
-        }
-    });
-    car.body.physicsImpostor.addJoint(car.wheel3.physicsImpostor, car.joint3);
-
-    car.joint4 = new BABYLON.Hinge2Joint({
-        mainPivot: new BABYLON.Vector3(w, car.body.position.y-30, d),
-        mainAxis: new BABYLON.Vector3(0, car.body.position.y-30, -10),
-        connectedAxis: new BABYLON.Vector3(0, car.body.position.y-30, 0),
-        nativeParams: {
-            limit: [0, 0],
-            spring: [100, 1]
-        }
-    });
-    car.body.physicsImpostor.addJoint(car.wheel4.physicsImpostor, car.joint4);
-
-    car.drive = function(speed){
-
-      car.joint1.setMotor(speed, 5000, 0);
-      car.joint2.setMotor(speed, 5000, 0);
+  function handler(event) {
+    var down = (event.type == 'keydown');
+    var up = (event.type == 'keyup');
+    // console.log('keyhandler seems to be working!');
+    if (!up && !down){
+      return;
     }
-    car.stop = function(){
-      car.joint1.setMotor(0, 0, 0);
-      car.joint2.setMotor(0, 0, 0);
-    }
-    car.isMoving = false;
-    car.toggle = function (){
-      if (car.isMoving){
-        car.isMoving = false;
-        car.stop();
+    console.log('you pressed: ' + event.keyCode);
+    switch (event.keyCode) {
+      case 87: // forward
+      if (down){
+        players[playerID].accellerate();
       }
       else{
-        car.isMoving = true;
-        car.drive(300);
+        players[playerID].noAccellerate();
       }
+        break;
+
+      case 83: // backward
+        if (down){
+          players[playerID].decellerate();
+        }
+        else{
+          players[playerID].noDecellerate();
+        }
+
+        break;
+
+      case 68: // right
+        if (down){
+          players[playerID].turnRight();
+        }
+        else{
+          players[playerID].noTurnRight();
+        }
+
+        break;
+
+      case 65: // left
+      if (down){
+        players[playerID].turnLeft();
+      }
+      else{
+        players[playerID].noTurnLeft();
+      }
+      break;
+      case 70:
+        players[playerID].flipVehicle();
+        break;
+      case 32:
+        if (down){
+          players[playerID].handBrakeOn();
+        }
+        else{
+          players[playerID].handbrakeOff();
+        }
+
     }
-    return car;
+  }
 }
-
-//---------------- MORE UNUSED CODE -----------------
-
-
-
-*/
-
-
-
-
-
-
-// end of file

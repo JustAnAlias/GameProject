@@ -114,13 +114,6 @@ function changeCameraToPlayer(thePlayer){
   }
 
 
-
-
-
-
-
-
-
 var createScene = function () {
 	scene = new BABYLON.Scene(engine);
 	scene.enablePhysics(new BABYLON.Vector3(0, -9.8, 0), new BABYLON.CannonJSPlugin());
@@ -141,7 +134,7 @@ var createScene = function () {
 			ground2.material.diffuseColor = BABYLON.Color3.Black();
 			ground2.material.wireframe = true;
 
-			var gbody = ground.setPhysicsState(BABYLON.PhysicsEngine.HeightmapImpostor, { mass: 0 });
+			var gbody = ground.setPhysicsState(BABYLON.PhysicsEngine.HeightmapImpostor, { mass: 0, friction: 20 });
 
 		} // end of callback
 	);
@@ -153,20 +146,19 @@ var createScene = function () {
 function addOrientationLines(thing){
   var size = 20;
   var pilot_world_local_axisX = BABYLON.Mesh.CreateLines("pilot_world_local_axisX", [
-new BABYLON.Vector3.Zero(), new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, 0.05 * size, 0),
-new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
-], scene);
-pilot_world_local_axisX.color = new BABYLON.Color3(1, 0, 0);
+    new BABYLON.Vector3.Zero(), new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, 0.05 * size, 0),
+    new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
+  ], scene);
+  pilot_world_local_axisX.color = new BABYLON.Color3(1, 0, 0);
+  pilot_world_local_axisY = BABYLON.Mesh.CreateLines("pilot_world_local_axisY", [
+    new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(-0.05 * size, size * 0.95, 0),
+    new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(0.05 * size, size * 0.95, 0)
+  ], scene);
+  pilot_world_local_axisY.color = new BABYLON.Color3(0, 1, 0);
 
-pilot_world_local_axisY = BABYLON.Mesh.CreateLines("pilot_world_local_axisY", [
-  new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(-0.05 * size, size * 0.95, 0),
-  new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(0.05 * size, size * 0.95, 0)
-], scene);
-pilot_world_local_axisY.color = new BABYLON.Color3(0, 1, 0);
-
-var pilot_world_local_axisZ = BABYLON.Mesh.CreateLines("pilot_world_local_axisZ", [
-  new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3( 0 , -0.05 * size, size * 0.95),
-  new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3( 0, 0.05 * size, size * 0.95)
+  var pilot_world_local_axisZ = BABYLON.Mesh.CreateLines("pilot_world_local_axisZ", [
+    new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3( 0 , -0.05 * size, size * 0.95),
+    new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3( 0, 0.05 * size, size * 0.95)
   ], scene);
 pilot_world_local_axisZ.color = new BABYLON.Color3(0, 0, 1);
 
@@ -176,118 +168,121 @@ pilot_world_local_axisY.parent = thing;
 pilot_world_local_axisZ.parent = thing;
 }
 
-
-
-
-
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-
 function nativeCannonVehicle(newPlayerID, startPosition){
   //CAR!
   var res ={};
-    res.id = newPlayerID;
-          res.width = 8;
-          res.depth = 8;
-          res.height = 1;
-          res.mass = 100;
-
-          res.wheelDiameter = 5;
-          res.wheelDepthPosition = (res.depth + res.wheelDiameter) / 2
-
-          res.axisWidth = res.width + res.wheelDiameter;
-
-          var centerOfMassAdjust = new CANNON.Vec3(0, -res.wheelDiameter, 0);
-
-          res.chassis = BABYLON.MeshBuilder.CreateBox("chassis", {
+  res.id = newPlayerID;
+  res.width = 8;
+  res.depth = 8;
+  res.height = 1;
+  res.mass = 40;
+  res.wheelDiameter = 5;
+  res.wheelDepthPosition = (res.depth + res.wheelDiameter) / 2
+  res.axisWidth = res.width + res.wheelDiameter;
+  res.chassis = BABYLON.MeshBuilder.CreateBox("chassis", {
               width: res.width,
               height: res.height,
               depth: res.depth
           }, scene);
-          res.chassis.position.y = res.wheelDiameter + res.height / 2 + 40;
-          res.chassis.physicsImpostor = new BABYLON.PhysicsImpostor(res.chassis, BABYLON.PhysicsEngine.BoxImpostor, {
-              mass: res.mass
-          })
-          // archCam.target = res.chassis;
-          res.wheels = [0, 1, 2, 3].map(function(num) {
-              var wheel = BABYLON.MeshBuilder.CreateSphere("wheel" + num, {
-                  segments: 4,
-                  diameter: res.wheelDiameter
-              }, scene);
-              var a = (num % 2) ? -1 : 1;
-              var b = num < 2 ? 1 : -1;
-              wheel.position.copyFromFloats(a * res.axisWidth / 2, res.wheelDiameter / 2, b * res.wheelDepthPosition)
-              wheel.scaling.x = 0.4;
-              wheel.physicsImpostor = new BABYLON.PhysicsImpostor(wheel, BABYLON.PhysicsEngine.SphereImpostor, {
-                  mass: 5
-              });
-              return wheel;
-          });
+  res.chassis.position.y = res.wheelDiameter + 40;
 
-          res.vehicle = new CANNON.RigidVehicle({
-              chassisBody: res.chassis.physicsImpostor.physicsBody
-          });
+//          res.chassis.position.y = res.wheelDiameter + res.height / 2 + 40;
+  res.chassis.physicsImpostor = new BABYLON.PhysicsImpostor(res.chassis, BABYLON.PhysicsEngine.BoxImpostor, {
+    mass: res.mass
+  });
+  var centerOfMassAdjust = new CANNON.Vec3(0, -res.wheelDiameter, 0);
+  // archCam.target = res.chassis;
+  res.wheels = [0, 1, 2, 3].map(function(num) {
+    var wheel = BABYLON.MeshBuilder.CreateSphere("wheel" + num,
+      { segments: 4,
+        diameter: res.wheelDiameter
+      }, scene);
+    var a = (num % 2) ? -1 : 1;
+    var b = num < 2 ? 1 : -1;
+    wheel.position.copyFromFloats(a * res.axisWidth / 2, res.wheelDiameter / 2, b * res.wheelDepthPosition);
+    wheel.scaling.x = 0.4;
+    wheel.physicsImpostor = new BABYLON.PhysicsImpostor(wheel, BABYLON.PhysicsEngine.SphereImpostor,
+      { mass: 10 });
+    return wheel;
+  });
 
+  res.vehicle = new CANNON.RigidVehicle(
+    {
+      chassisBody: res.chassis.physicsImpostor.physicsBody
+    }
+  );
+  var down = new CANNON.Vec3(0, -1, 0);
 
-          var down = new CANNON.Vec3(0, -1, 0);
+  res.vehicle.addWheel(
+    {
+      body: res.wheels[0].physicsImpostor.physicsBody,
+      position: new CANNON.Vec3(res.axisWidth / 2, 0, res.wheelDepthPosition).vadd(centerOfMassAdjust),
+      axis: new CANNON.Vec3(1, 0, 0),
+      direction: down,
+      friction: 20,
+      suspensionLength: 1
+    }
+  );
 
-          res.vehicle.addWheel({
-              body: res.wheels[0].physicsImpostor.physicsBody,
-              position: new CANNON.Vec3(res.axisWidth / 2, 0, res.wheelDepthPosition).vadd(centerOfMassAdjust),
-              axis: new CANNON.Vec3(1, 0, 0),
-              direction: down
-          });
+      res.vehicle.addWheel(
+        {
+          body: res.wheels[1].physicsImpostor.physicsBody,
+          position: new CANNON.Vec3(-res.axisWidth / 2, 0, res.wheelDepthPosition).vadd(centerOfMassAdjust),
+          axis: new CANNON.Vec3(-1, 0, -0),
+          direction: down,
+          friction: 20,
+          suspensionLength: 1
+        }
+      );
 
-          res.vehicle.addWheel({
-              body: res.wheels[1].physicsImpostor.physicsBody,
-              position: new CANNON.Vec3(-res.axisWidth / 2, 0, res.wheelDepthPosition).vadd(centerOfMassAdjust),
-              axis: new CANNON.Vec3(-1, 0, -0),
-              direction: down
-          });
-
-          res.vehicle.addWheel({
+          res.vehicle.addWheel(
+            {
               body: res.wheels[2].physicsImpostor.physicsBody,
               position: new CANNON.Vec3(res.axisWidth / 2, 0, -res.wheelDepthPosition).vadd(centerOfMassAdjust),
               axis: new CANNON.Vec3(1, 0, 0),
-              direction: down
-          });
+              direction: down,
+              friction: 20,
+              suspensionLength: 1
+            }
+          );
 
-          res.vehicle.addWheel({
+          res.vehicle.addWheel(
+            {
               body: res.wheels[3].physicsImpostor.physicsBody,
               position: new CANNON.Vec3(-res.axisWidth / 2, 0, -res.wheelDepthPosition).vadd(centerOfMassAdjust),
               axis: new CANNON.Vec3(-1, 0, 0),
-              direction: down
-          });
+              direction: down,
+              friction: 20,
+              suspensionLength: 1
+            }
+          );
 
           // Some damping to not spin wheels too fast
           for (var i = 0; i < res.vehicle.wheelBodies.length; i++) {
-              res.vehicle.wheelBodies[i].angularDamping = 0.8;
+            res.vehicle.wheelBodies[i].angularDamping = 0.2;
           }
 
           //add the constraints to the world
-          var world = res.wheels[3].physicsImpostor.physicsBody.world
+          var world = res.wheels[3].physicsImpostor.physicsBody.world;
 
-          for (var i = 0; i < res.vehicle.constraints.length; i++) {
-              world.addConstraint(res.vehicle.constraints[i]);
+          for (var i = 0; i < res.vehicle.constraints.length; i++)
+          {
+            world.addConstraint(res.vehicle.constraints[i]);
           }
 
-          res.setSteeringValue = function(value, wheelIndex) {
-              // Set angle of the hinge axis
-              var axis = this.wheelAxes[wheelIndex];
-
-              var c = Math.cos(value),
-                  s = Math.sin(value),
-                  x = axis.x,
-                  z = axis.z;
-              this.constraints[wheelIndex].axisA.set(
-                  c * x - s * z,
-                  0,
-                  s * x + c * z
-              );
+          res.setSteeringValue = function(value, wheelIndex)
+          {
+            // Set angle of the hinge axis
+            var axis = this.wheelAxes[wheelIndex];
+            var c = Math.cos(value),
+                s = Math.sin(value),
+                x = axis.x,
+                z = axis.z;
+            this.constraints[wheelIndex].axisA.set(
+              c * x - s * z,
+              0,
+              s * x + c * z
+            );
           };
           res.vehicle.setSteeringValue = res.setSteeringValue.bind(res.vehicle);
 
@@ -296,51 +291,85 @@ function nativeCannonVehicle(newPlayerID, startPosition){
           document.onkeydown = handler;
           document.onkeyup = handler;
 
-          scene.onPointerUp = function() {
-              res.chassis.physicsImpostor.applyImpulse(new BABYLON.Vector3(-2000, 3000, 0), res.chassis.getAbsolutePosition())
+          scene.onPointerUp = function()
+          {
+            res.chassis.physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 30, res.mass * 100, res.mass * 1), res.chassis.getAbsolutePosition())
           }
-
+          var turnPerTick = Math.PI /100;
+          var steerVal = 0;
           var maxSteerVal = Math.PI / 6;
           var maxSpeed = 200;
-          var maxForce = 200;
+          var maxForce = 300;
+          var steerLeft = false;
+          var steerRight = false;
+          setInterval(function(){
+
+            if(steerLeft){
+              steerVal = Math.min(steerVal+= turnPerTick, maxSteerVal);
+            }
+            else if (steerRight) {
+              steerVal = Math.max(steerVal-= turnPerTick, 0-maxSteerVal);
+            }
+            else{
+              if (steerVal < 0 - turnPerTick){
+                steerVal += turnPerTick;
+              }
+              else if (steerVal > 0 + turnPerTick){
+                steerVal -= turnPerTick;
+              }
+              else {
+                steerVal = 0;
+              }
+            }
+            res.vehicle.setSteeringValue(steerVal, 2);
+            res.vehicle.setSteeringValue(steerVal, 3);
+
+          }, 50);
 // EventHandlers (keys and mouse)
           function handler(event) {
-            if (event.type == 'keydown'){
-              console.log(event.keyCode);
+            var down = (event.type == 'keydown');
+            var up = (event.type == 'keyup');
+            // console.log('keyhandler seems to be working!');
+            if (!up && !down){
+              return;
             }
-            console.log('keyhandler seems to be working!');
-              var up = (event.type == 'keyup');
 
-              if (!up && event.type !== 'keydown')
-                  return;
+            switch (event.keyCode) {
+              case 87: // forward
+                res.vehicle.setWheelForce(up ? 0 : -maxForce, 0);
+                res.vehicle.setWheelForce(up ? 0 : maxForce, 1);
+                break;
 
-              switch (event.keyCode) {
+              case 83: // backward
+                res.vehicle.setWheelForce(up ? 0 : maxForce / 2, 0);
+                res.vehicle.setWheelForce(up ? 0 : -maxForce / 2, 1);
+                break;
 
-                  case 87: // forward
-                      res.vehicle.setWheelForce(up ? 0 : -maxForce, 0);
-                      res.vehicle.setWheelForce(up ? 0 : maxForce, 1);
-                      break;
+              case 68: // right
+                if (down){
+                  steerRight = true;
+                }
+                else{
+                  steerRight = false;
+                  // console.log('stopped steering right!');
+                }
 
-                  case 83: // backward
-                      res.vehicle.setWheelForce(up ? 0 : maxForce / 2, 0);
-                      res.vehicle.setWheelForce(up ? 0 : -maxForce / 2, 1);
-                      break;
+                break;
 
-                  case 68: // right
-                      res.vehicle.setSteeringValue(up ? 0 : -maxSteerVal, 2);
-                      res.vehicle.setSteeringValue(up ? 0 : -maxSteerVal, 3);
-                      break;
-
-                  case 65: // left
-                      res.vehicle.setSteeringValue(up ? 0 : maxSteerVal, 2);
-                      res.vehicle.setSteeringValue(up ? 0 : maxSteerVal, 3);
-                      break;
-
+              case 65: // left
+              if (down){
+                steerLeft = true;
               }
-          }
-          //res.chassis.position.y += 1000;
-          return res;
-        }
+              else{
+                steerLeft = false;
+                // console.log('stopped steering left!');
+              }
+                break;
+              }
+            }
+            //res.chassis.position.y += 1000;
+            return res;
+}
 
 
 

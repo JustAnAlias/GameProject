@@ -290,11 +290,13 @@ function nativeCannonVehicle(newPlayerID, startPosition){
 
           document.onkeydown = handler;
           document.onkeyup = handler;
-
+/*
           scene.onPointerUp = function()
           {
             res.chassis.physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 30, res.mass * 100, res.mass * 1), res.chassis.getAbsolutePosition())
           }
+
+*/
           var turnPerTick = Math.PI /100;
           var steerVal = 0;
           var maxSteerVal = Math.PI / 6;
@@ -333,7 +335,7 @@ function nativeCannonVehicle(newPlayerID, startPosition){
             if (!up && !down){
               return;
             }
-
+            console.log('you pressed: ' + event.keyCode);
             switch (event.keyCode) {
               case 87: // forward
                 res.vehicle.setWheelForce(up ? 0 : -maxForce, 0);
@@ -365,6 +367,9 @@ function nativeCannonVehicle(newPlayerID, startPosition){
                 // console.log('stopped steering left!');
               }
                 break;
+              case 70:
+                res.wheels[3].physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 0, res.mass * 7, res.mass * 0), res.wheels[3].getAbsolutePosition());
+                res.wheels[2].physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 0, res.mass * 7, res.mass * 0), res.wheels[2].getAbsolutePosition());
               }
             }
             //res.chassis.position.y += 1000;

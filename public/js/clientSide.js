@@ -1,4 +1,4 @@
-var canvas, engine, scene, light, groundMaterial, groundPlane, ground, freeCam, playerCam, archCam;
+var canvas, engine, scene, light, groundMaterial, groundPlane, ground, freeCam, playerCam, archCam, bor, bord, world;
 var playerID;
 var players = {};
 var my3dObjects = {};
@@ -116,7 +116,8 @@ function changeCameraToPlayer(thePlayer){
 
 var createScene = function () {
 	scene = new BABYLON.Scene(engine);
-	scene.enablePhysics(new BABYLON.Vector3(0, -9.8, 0), new BABYLON.CannonJSPlugin());
+  world = new BABYLON.Vector3(0, -9.8, 0), new BABYLON.CannonJSPlugin();
+	scene.enablePhysics(world);
 
 	var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
 	light.intensity = 0.5;
@@ -131,13 +132,48 @@ var createScene = function () {
 		function () { // callback.  When heightMap done, run this.
 			var ground2 = ground.clone();
 			ground2.material = new BABYLON.StandardMaterial("wire", scene);
-			ground2.material.diffuseColor = BABYLON.Color3.Black();
-			ground2.material.wireframe = true;
+      ground2.material.diffuseTexture = new BABYLON.Texture("/gras1.jpg", scene);
+      // ground2.material.diffuseColor = BABYLON.Color3.Black();
+			// ground2.material.wireframe = true;
 
 			var gbody = ground.setPhysicsState(BABYLON.PhysicsEngine.HeightmapImpostor, { mass: 0, friction: 20 });
 
 		} // end of callback
 	);
+  var materialbox2 = new BABYLON.StandardMaterial("texture2", scene);
+    // materialbox2.diffuseTexture = new BABYLON.Texture("carx/palm_s.png", scene);
+    materialbox2.specularColor = new BABYLON.Color3(0, 0, 0);
+  bor = new Array(4);
+    var boxShape411 = new CANNON.Box(new CANNON.Vec3(298, 4, 300));
+    for (var i = 0; i < bor.length; i++) {
+        bor[i] = new CANNON.Body(0, boxShape411);
+        if (i == 0) bor[i].position.y = 300; else if (i == 1) bor[i].position.y = -300; else bor[i].position.y = 0;
+        if (i == 2) bor[i].position.x = 300; else if (i == 3) bor[i].position.x = -300; else bor[i].position.x = 0;
+        bor[i].position.z = 50;
+        if (i > 1) bor[i].quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI/2);
+        world.add(bor[i]);
+    }
+
+bord = new Array(bor.length);
+    bord[0] = new BABYLON.Mesh.CreateBox("bord1", 1, scene);
+    bord[0].scaling = new BABYLON.Vector3(602, 10, 2);
+    bord[0].visibility = 0.3;
+    bord[0].material = materialbox2;
+    bord[1] = bord[0].clone();
+    bord[2] = bord[0].clone();
+    bord[3] = bord[0].clone();
+for (i = 0; i < bor.length; i++) {
+    bord[i].position = new BABYLON.Vector3(bor[i].position.x, bor[i].position.z - 50, bor[i].position.y);
+    bord[i].rotationQuaternion = new BABYLON.Quaternion(bor[i].quaternion.x, bor[i].quaternion.z, bor[i].quaternion.y, -bor[i].quaternion.w);
+}
+
+
+
+
+
+
+
+
 
 	return scene;
 };

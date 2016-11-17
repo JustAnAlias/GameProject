@@ -130,7 +130,7 @@ var createScene = function () {
 	ground = BABYLON.Mesh.CreateGroundFromHeightMap(
 		"ground",
 		"map",
-		500, 500, 100, 0, 40, scene, false,
+		600, 600, 100, 0, 40, scene, false,
 		function () { // callback.  When heightMap done, run this.
 			var ground2 = ground.clone();
 			ground2.material = new BABYLON.StandardMaterial("wire", scene);
@@ -144,9 +144,9 @@ var createScene = function () {
   materialbox2.specularColor = new BABYLON.Color3(0, 0, 0);
 
   bor = new Array(4);
-  var boxShape411 = new CANNON.Box(new CANNON.Vec3(298, 4, 300));
+  var boxShape411 = new CANNON.Box(new CANNON.Vec3(298, 40, 300)); // changed 4 to 40 in the y-axis
   for (var i = 0; i < bor.length; i++) {
-    bor[i] = new CANNON.Body(0, boxShape411);
+    bor[i] = new CANNON.Body(9999999, boxShape411); // changed 0 to a lot
     if (i == 0){
       bor[i].position.y = 300;
     }
@@ -163,18 +163,26 @@ var createScene = function () {
   }
 
   bord = new Array(bor.length);
-  bord[0] = new BABYLON.Mesh.CreateBox("bord1", 1, scene);
+  bord[0] = BABYLON.MeshBuilder.CreateBox("bord1", {
+    width: 1,
+    height: 40,
+    depth: 1
+  }, scene);
   bord[0].scaling = new BABYLON.Vector3(602, 10, 2);
   bord[0].visibility = 0.3;
   bord[0].material = materialbox2;
+  bord[0].physicsImpostor = new BABYLON.PhysicsImpostor(bord[0], BABYLON.PhysicsEngine.BoxImpostor, {
+    mass: 0
+  });
   bord[1] = bord[0].clone();
   bord[2] = bord[0].clone();
   bord[3] = bord[0].clone();
 
   for (i = 0; i < bor.length; i++) {
-    bord[i].position = new BABYLON.Vector3(bor[i].position.x, bor[i].position.z - 50, bor[i].position.y);
+    bord[i].position = new BABYLON.Vector3(bor[i].position.x, bor[i].position.z - 50, bor[i].position.y + 5); // added 5 to position.y
     bord[i].rotationQuaternion = new BABYLON.Quaternion(bor[i].quaternion.x, bor[i].quaternion.z, bor[i].quaternion.y, -bor[i].quaternion.w);
   }
+
   return scene;
 };
 

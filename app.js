@@ -7,7 +7,8 @@ var Roles = require(__dirname + '/server/roles.js');
 var game = require(__dirname + '/server/game.js');
 
 var clients = 0;
-var updateInterval = 1000;
+var updateInterval = 100;
+var nextUpdate = [];
 
 
 var players = {};
@@ -60,10 +61,8 @@ app.get('/gras1.jpg', function(req, res){
 
 // broadcast all player info to all players
 var updateClients = function(){
-  var update = {};
-  update.allPlayers = game.getPlayers();
-  io.sockets.emit('update', game.getPlayers());
-
+  io.sockets.emit('update', nextUpdate);
+  nextUpdate = [];
 }
  setInterval(updateClients, updateInterval);
 
@@ -95,6 +94,11 @@ io.on('connection', function(socket){
         io.emit('removeOtherPlayer', player);
         game.removePlayer( player.id );
         clients--;
+    });
+    socket.on('moving', function(data){
+      var item = data;
+      item.id = socket.id;
+      nextUpdate.push(item);
     });
 
 });

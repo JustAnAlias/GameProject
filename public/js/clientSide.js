@@ -42,13 +42,13 @@ window.addEventListener('DOMContentLoaded', function(){
 window.addEventListener("click", function () {
   // players[playerID].mesh.toggle();
   // We try to pick an object
-  // console.log('players orientation: ');
-  // console.log(players[playerID]);
-  console.log(my3dObjects);
+  // // console.log('players orientation: ');
+  // // console.log(players[playerID]);
+  // console.log(my3dObjects);
   var target = scene.pick(scene.pointerX, scene.pointerY);
-  console.log(target);
+  // console.log(target);
   var update = {};
-  // // console.log(target);
+  // // // console.log(target);
 
   if(target.pickedMesh.name == 'ground'){
     update.destination = target.pickedPoint;
@@ -59,7 +59,7 @@ window.addEventListener("click", function () {
   update.position = players[playerID].mesh.body.getAbsolutePosition();
   // moveItem(update.destination);
   socket.emit('update', update);
-  // console.log('object ' + players[playerID].id + ' is at position: ' + JSON.stringify(update.position) + ' and going to ' + JSON.stringify(update.destination));
+  // // console.log('object ' + players[playerID].id + ' is at position: ' + JSON.stringify(update.position) + ' and going to ' + JSON.stringify(update.destination));
 
 });
 */
@@ -72,29 +72,44 @@ function removeRemotePlayer(player){
 
 function updatePlayerPosition(data){
 
-    // console.log('incoming playerposition data: ');
-    // console.log(JSON.stringify(data));
-  //  // console.log('object: ' + data.id);
-  //  // console.log('object position: ' + JSON.stringify(data.position));
+    // // console.log('incoming playerposition data: ');
+    // // console.log(JSON.stringify(data));
+  //  // // console.log('object: ' + data.id);
+  //  // // console.log('object position: ' + JSON.stringify(data.position));
   //  moveItem(players[data.id], data.position);
     // players[data.id].mesh.position = data.position;
 }
 
-
+// setting the clients playerID
 function createPlayer(data){
   if (!playerID){
-    // console.log('setting playerID to: ' + data.id);
+    // // console.log('setting playerID to: ' + data.id);
     playerID = data.id;
   }
 }
 
+function updatePlayerMoves(data){
+  for(var i = 0; i<data.length; i++){
+    // console.log('trying to move player ' + data[i].id);
+    // console.log('i have these players in my list: ');
+    // console.log(players);
+    players[data[i].id].move(data[i].action, data[i].value);
+    // console.log('player: ' + data[i].id);
+    // console.log('action: ' + data[i].action);
+    // console.log('is:' + data[i].value);
+    // console.log(data[i]);
+  }
+}
+
 function addRemotePlayer(player){
+  console.log('trying to add player with id: ' + player.id);
   if (players[player.id]){
-    // console.log('addRemotePlayer says: player ' + data.id + ' already exists');
+    // // console.log('addRemotePlayer says: player ' + data.id + ' already exists');
   }
   else{
-    players[player.id] = player;
-    players[player.id] = nativeCannonVehicle(player.id);
+
+    players[player.id] = nativeCannonVehicle(player);
+
   }
 
   if (playerID === player.id){
@@ -212,10 +227,11 @@ pilot_world_local_axisY.parent = thing;
 pilot_world_local_axisZ.parent = thing;
 }
 
-function nativeCannonVehicle(newPlayerID, startPosition){
+function nativeCannonVehicle(newPlayer){
   //CAR!
-  var res ={};
-  res.id = newPlayerID;
+  var res = newPlayer;
+  res.hitPoints = 100;
+
   res.width = 8;
   res.depth = 8;
   res.height = 3;
@@ -228,6 +244,7 @@ function nativeCannonVehicle(newPlayerID, startPosition){
     height: res.height,
     depth: res.depth
   }, scene);
+
   res.chassis.position.y = res.wheelDiameter + 40;
 
 
@@ -325,17 +342,30 @@ function nativeCannonVehicle(newPlayerID, startPosition){
   var maxSteerVal = Math.PI / 6;
   var maxSpeed = 200;
   var maxForce = 300;
+  res.controlValues = {};
+
+
+  res.controlValues.steerLeft = false;
+  res.controlValues.steerRight = false;
+  res.controlValues.forwards = false;
+  res.controlValues.backwards = false;
+  res.controlValues.handbrake = true;
+  res.controlValues.flip = false;
+  /*
   var steerLeft = false;
   var steerRight = false;
   var forwards = false;
   var backwards = false;
   var handbrake = true;
-  setInterval(function(){
-    if (forwards){
+  */
+  res.moveInterval = setInterval(function(){
+    if (res.controlValues.forwards){
+      res.controlValues.handbrake = false;
       res.vehicle.setWheelForce(-maxForce, 0);
       res.vehicle.setWheelForce(maxForce, 1);
     }
-    else if (backwards){
+    else if (res.controlValues.backwards){
+      res.controlValues.handbrake = false;
       res.vehicle.setWheelForce(maxForce / 2, 0);
       res.vehicle.setWheelForce(-maxForce / 2, 1);
     }
@@ -343,26 +373,41 @@ function nativeCannonVehicle(newPlayerID, startPosition){
       res.vehicle.setWheelForce(0, 0);
       res.vehicle.setWheelForce(0, 1);
     }
-    if(steerLeft){
+    if(res.controlValues.steerLeft){
+      res.controlValues.handbrake = false;
       steerVal = Math.min(steerVal+= turnPerTick, maxSteerVal);
     }
-    else if (steerRight) {
+    else if (res.controlValues.steerRight) {
+      res.controlValues.handbrake = false;
       steerVal = Math.max(steerVal-= turnPerTick, 0-maxSteerVal);
     }
     else{
-      if (steerVal < 0 - turnPerTick){
+
+      if (res.controlValues.steerVal < 0 - turnPerTick){
+        res.controlValues.handbrake = false;
         steerVal += turnPerTick;
       }
       else if (steerVal > 0 + turnPerTick){
+        res.controlValues.handbrake = false;
         steerVal -= turnPerTick;
       }
       else {
           steerVal = 0;
       }
     }
+    if (res.controlValues.flip){
+      res.controlValues.handbrake = false;
+      flipVehicle();
+      res.controlValues.flip = false;
+    }
     res.vehicle.setSteeringValue(steerVal, 2);
     res.vehicle.setSteeringValue(steerVal, 3);
   }, 50);
+
+
+  res.move = function(act, val){
+    res.controlValues[act] = val;
+  }
 
   res.turnLeft = function(){
     steerLeft = true;
@@ -410,9 +455,9 @@ function nativeCannonVehicle(newPlayerID, startPosition){
     }
   }
 
-  res.flipVehicle = function(){
-    res.wheels[3].physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 0, res.mass * 6, res.mass * 0), res.wheels[3].getAbsolutePosition());
-    res.wheels[2].physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 0, res.mass * 6, res.mass * 0), res.wheels[2].getAbsolutePosition());
+  var flipVehicle = function(){
+    res.wheels[3].physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 0, res.mass * 10, res.mass * 0), res.wheels[3].getAbsolutePosition());
+    res.wheels[2].physicsImpostor.applyImpulse(new BABYLON.Vector3(res.mass * 0, res.mass * 10, res.mass * 0), res.wheels[2].getAbsolutePosition());
   }
   return res;
 }
@@ -424,63 +469,87 @@ function addControls(){
   document.onkeydown = handler;
   document.onkeyup = handler;
 
-  function handler(event) {
+  function handler(event){
     var down = (event.type == 'keydown');
     var up = (event.type == 'keyup');
-    // console.log('keyhandler seems to be working!');
+    // // console.log('keyhandler seems to be working!');
     if (!up && !down){
       return;
     }
-    console.log('you pressed: ' + event.keyCode);
+    var toSend = {};
     switch (event.keyCode) {
       case 87: // forward
       if (down){
-        players[playerID].accellerate();
+        // players[playerID].accellerate();
+        toSend.action = 'forwards';
+        toSend.value = true;
       }
       else{
-        players[playerID].noAccellerate();
+        // players[playerID].noAccellerate();
+        toSend.action = 'forwards';
+        toSend.value = false;
       }
         break;
 
       case 83: // backward
         if (down){
-          players[playerID].decellerate();
+          // players[playerID].decellerate();
+          toSend.action = 'backwards';
+          toSend.value = true;
         }
         else{
-          players[playerID].noDecellerate();
+          // players[playerID].noDecellerate();
+          toSend.action = 'backwards';
+          toSend.value = false;
         }
 
         break;
 
       case 68: // right
         if (down){
-          players[playerID].turnRight();
+          // players[playerID].turnRight();
+          toSend.action = 'steerRight';
+          toSend.value = true;
         }
         else{
-          players[playerID].noTurnRight();
+          // players[playerID].noTurnRight();
+          toSend.action = 'steerRight';
+          toSend.value = false;
         }
 
         break;
 
       case 65: // left
       if (down){
-        players[playerID].turnLeft();
+        // players[playerID].turnLeft();
+        toSend.action = 'steerLeft';
+        toSend.value = true;
       }
       else{
-        players[playerID].noTurnLeft();
+        // players[playerID].noTurnLeft();
+        toSend.action = 'steerLeft';
+        toSend.value = false;
       }
       break;
       case 70:
-        players[playerID].flipVehicle();
+        // players[playerID].flipVehicle();
+        toSend.action = 'flip';
+        toSend.value = true;
         break;
       case 32:
         if (down){
-          players[playerID].handBrakeOn();
+          // players[playerID].handBrakeOn();
+          toSend.action = 'handbrake';
+          toSend.value = true;
         }
         else{
-          players[playerID].handbrakeOff();
+          // players[playerID].handbrakeOff();
+          toSend.action = 'handbrake';
+          toSend.value = false;
         }
+        break;
 
     }
+    socket.emit('moving', toSend);
   }
 }

@@ -21,10 +21,7 @@
       var socket = io();
 
       socket.on('update', function(data){
-        for (var p in data){
-          console.log('moving player: ' + JSON.stringify(data[p]));
-          updatePlayerPosition(data[p]);
-        }
+        updatePlayerMoves(data);
       });
 
       socket.on('createPlayer', function(data){
